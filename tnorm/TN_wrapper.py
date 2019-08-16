@@ -398,55 +398,16 @@ class TN_wrapper():
 			print('Computing Thurston norm unit ball... ', end='')
 		pts_dict, rays_dict = self._norm_ball_points
 		if len(rays_dict) != 0:
-			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ)
+			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
 			rays = tuple([(rays_dict[tuple(i*vector(v))],i*vector(v)) for v in polyhedron.lines_list() for i in [1,-1]])
 			Rays = [Ray(i,rays[i][0],rays[i][1],self.num_boundary_comps(rays[i][0]), self.euler_char(rays[i][0]), self.boundary_slopes(rays[i][0]), True, self.is_admissible(rays[i][0]),True) for i in range(len(rays))]
-			## the points in vertices are the vertices of polyhedron modulo its rays, 
-			## which are not necessarily points from pts_dict. To find a surface representing
-			## each of these vertices, we need to express them as linear combinations of 
-			## points in pts_dict
-			H2_vecs_dict = dict([(tuple(self.map_to_H2(i)),i) for i in pts_dict.values()])
-			H2_vecs = [vector(vec) for vec in H2_vecs_dict.keys()]
-			QVS = VectorSpace(QQ,polyhedron.dim())
-			possible_bases = [vecs for vecs in itertools.combinations(H2_vecs,polyhedron.dim()) if QVS.span(vecs).dimension()==polyhedron.dim()]
-			top_dim_faces = polyhedron.faces(polyhedron.dim()-1)
-			Vertices = []
-			for k in range(len(polyhedron.vertices())):
-				v = polyhedron.vertices()[k]
-				found = False
-				for face, basis in itertools.product(top_dim_faces, possible_bases):
-					if v in face.vertices() and basis_over_face(basis, polyhedron, face):
-						print(v.vector())
-						print([vert.vector() for vert in face.vertices()], [line.vector() for line in face.lines()], basis)
-						M = Matrix(basis).transpose()
-						sol = M.solve_right(v.vector())
-						print(sol)
-						if sorted(list(sol))[0] >= 0:
-							boundary_slopes = []
-							num_boundary_comps = 0
-							euler_char = 0
-							for i in range(self.manifold.num_cusps()):
-								slope = vector((0,0))
-								for j in range(len(basis)):
-									vec_slope = self.boundary_slopes(H2_vecs_dict[tuple(basis[j])])[i]
-									slope += sol[j]*vector(vec_slope)
-									if i == 0:
-										euler_char += sol[j]*self.euler_char(H2_vecs_dict[tuple(basis[j])])
-								boundary_slopes.append(slope)
-								num_boundary_comps += gcd(slope[0],slope[1])
-							Vertices.append(AdornedVertex(k, None, v.vector(), num_boundary_comps, euler_char, boundary_slopes, False, None, True))
-							found = True
-							break
-				if found == False:
-					Vertices.append(AdornedVertex(k, None, v.vector(), None, None, None, False, None, False))
-
 
 
 		else:
-			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)
-			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
-			Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ, backend='cdd')
 			Rays = []
+		vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
+		Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
 		ball = TNormBall(Vertices, Rays, polyhedron)
 		if not QUIET:
 			print('Done.')
@@ -464,7 +425,7 @@ class TN_wrapper():
 			v = -vector(e[1:])/(e[0])
 			poly_vertices.append(v)
 			vertices.append(DualVertex(i, v, B.facets(P.dim()-1)[i]))
-		P_dual = Polyhedron(vertices=poly_vertices, base_ring=QQ)
+		P_dual = Polyhedron(vertices=poly_vertices, base_ring=QQ, backend='cdd')
 		dual_ball = DualNormBall(vertices, P_dual)
 		return dual_ball
 
