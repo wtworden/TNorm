@@ -32,10 +32,10 @@ def intersection_mat(M,T,cusp):
 
 ### Quad coordinate of the surface as a Matrix. Row i corresponds to tetrahedron i, and each row has
 ### six entries corresponding to the six quad types: (0,1), (2,3), (0,2), (1,3), (0,3), (1,2) in that order.
-def orientedQuads_mat(oriented_spun_surface):
+def oriented_quads_mat(oriented_spun_surface):
     s = oriented_spun_surface
     T = s.triangulation()
-    return Matrix([[get_orientedQuads(s,i,j,k) for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]] for i in range(T.size())])
+    return Matrix([[get_oriented_quads(s,i,j,k) for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]] for i in range(T.size())])
 
 
 ### Matrix that encodes how curves intersect with quad types.

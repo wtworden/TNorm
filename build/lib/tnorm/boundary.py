@@ -4,7 +4,7 @@ from tnorm.regina_helpers import *
 from tnorm.matrices import *
 
 ### count the number of boundary components of a spun normal surface
-def numBoundaryComps(spun_surface):
+def num_boundary_comps_(spun_surface):
     numBoundaryComps = 0
     b = spun_surface.boundaryIntersections()
     for i in range(b.rows()):
@@ -18,7 +18,7 @@ def get_quads(spun_surface,tet,v1,v2):
     v2 = int(v2)
     return regina_to_sage_type(s.quads(tet,v2-int(1)))
 
-def boundarySlopes(spun_surface,M=None):
+def boundary_slopes_(spun_surface,M=None):
     s = spun_surface
     T = s.triangulation()
     if M == None:
@@ -61,7 +61,7 @@ def get_surface_summary_homBdy(T,M,qns):
     surface_types = []
     surface_types_w_index = []
     for i in range(qns.size()):
-        st = Q_to_H1bdy(qns.surface(i)),eulerChar(qns.surface(i),angles)
+        st = Q_to_H1bdy(qns.surface(i)),euler_char_(qns.surface(i),angles)
         if st not in surface_types:
             surface_types.append(st)
             surface_types_w_index.append((i,st))
@@ -72,7 +72,7 @@ def get_surface_summary_normalBdy(T,M,qns):
     surface_types = []
     surface_types_w_index = []
     for i in range(qns.size()):
-        st = tuple([intersection_non_oriented(c,qns.surface(i),M) for c in range(T.countCusps())]),eulerChar(qns.surface(i),angles)
+        st = tuple([intersection_non_oriented(c,qns.surface(i),M) for c in range(T.countCusps())]),euler_char_(qns.surface(i),angles)
         if st not in surface_types:
             surface_types.append(st)
             surface_types_w_index.append((i,st))

@@ -1,37 +1,28 @@
 #-*-python-*-
-
+from __future__ import print_function
 
 import regina
 import snappy
 import sys
 import time
+import itertools
 
 
-from tnorm.eulerChar import *
-from tnorm.boundary import *
-from tnorm.HashableDict import *
-from tnorm.homology import *
-from tnorm.regina_helpers import *
-from tnorm.normBall import *
+from tnorm.kernel.euler import *
+from tnorm.kernel.boundary import *
+from tnorm.kernel.homology import *
+from tnorm.kernel.regina_helpers import *
+from tnorm.kernel.matrices import *
+from tnorm.norm_ball import *
 from tnorm.sage_types import *
-from tnorm.matrices import *
+from tnorm.utilities import *
+from tnorm.x3d_to_html import *
 
+import tnorm.constants
+
+QUIET = tnorm.constants.QUIET
 
 #preparser(False)
-
-
-def cachedproperty(func):
-    """ Used on methods to convert them to methods that replace themselves\
-        with their return value once they are called. """
-
-    def cache(*args):
-        self = args[0] # Reference to the class who owns the method
-        funcname = func.__name__
-        ret_value = func(self)
-        setattr(self, funcname, ret_value) # Replace the function with its value
-        return ret_value # Return the result of the function
-
-    return property(cache)
 
 
 class TN_wrapper():
@@ -50,96 +41,123 @@ class TN_wrapper():
 	sage: W = TN_wrapper(string)       # where string is the triangulation encoded as a string (i.e., contents of a tri file)
 
 	"""
-	def __init__(self,SnapPeaTri,QTONS=None,tracker=False,quiet=False,allowsNonAdmissible=False):
+	def __init__(self, SnapPeaTri, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, basis='natural'):
+		self.H1_basis = basis
+		
 		if isinstance(SnapPeaTri,str):
 			self.manifold = snappy.Manifold(SnapPeaTri)
-			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
 		elif isinstance(SnapPeaTri, regina.engine.SnapPeaTriangulation):
-			self.triangulation = SnapPeaTri
-			self.manifold = snappy.Manifold(self.triangulation.snapPea())
+			self.manifold = snappy.Manifold(SnapPeaTri.snapPea())
 		elif isinstance(SnapPeaTri, snappy.Manifold):
 			self.manifold = SnapPeaTri
-			self.triangulation = regina.SnapPeaTriangulation(SnapPeaTri._to_string())
+		
+		if self.H1_basis == 'shortest':
+			self.manifold.set_peripheral_curves('shortest')
+		self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
 		self._angle_structure = solve_lin_gluingEq(self.triangulation)
-		self._normBallPoints = None
-		self._QTONS = QTONS
-		self._index_bound = None
+		self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
+		self._qtons = qtons
 		self._tkr = False
-		self.allowsNonAdmissible = allowsNonAdmissible
-		if self._QTONS == None:
-			if not quiet:			
-				print("Enumerating oriented spun normal surfaces. \nThis could take awhile if the triangulation is large!")
-			if tracker:
-				self._tkr = regina.ProgressTracker()
-				if not quiet:
-					print('Warning: we are using a progress tracker. \nThe sage prompt will be returned imediately, but computations are\n continuing in the background. Pass W.showProgress() to check if finished.')
-			self._Oriented_QTONS_List()
+		self.allows_non_admissible = allows_non_admissible
+		QUIET = quiet
 
+		# qtons memoization caches-----
+		self._euler_char = {}
+		self._bdy_slopes_unoriented = {}
+		self._map_to_H1bdy = {}
+		self._map_to_ball = {}
+		self._map_to_H2 = {}
+		self._num_boundary_comps = {}
+		self._num_bdy_comps_unoriented = {}
+		self._over_face = {}
+		self._is_norm_minimizing = {}
+		self._is_admissible = {}
 
+		if not QUIET:			
+			print('Enumerating quad transversely oriented normal surfaces (qtons)... ', end='')
+		if tracker:
+			self._tkr = regina.ProgressTracker()
+		self._qtons = self.qtons()
+		for i in range(self._qtons.size()):
+			self._qtons.surface(i).setName(str(i))
+		if not QUIET:
+			print('Done.')
 
-	def _Oriented_QTONS_List(self):
+	def qtons(self):
 		"""
 		Enumerate vertex oriented quad normal surfaces for the ideal triangulation self.triangulation()
-		This is cached in self._QTONS, so calls to this function after the initial call (when TN_wrapper() is 
+		This is cached in self.qtons, so calls to this function after the initial call (when TN_wrapper() is 
 		instantiated) will be fast. 
 
 		Returns a regina.NormalSurfaces object.
 		"""
-		if self._QTONS == None:
+		if self._qtons == None:
 			if self._tkr:
-				if self.allowsNonAdmissible:
-					self._QTONS = regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
+				if self.allows_non_admissible:
+					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
 				else:
-					self._QTONS = regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
+					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
 			else:
-				if self.allowsNonAdmissible:
-					self._QTONS = regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
+				if self.allows_non_admissible:
+					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
 				else:
-					self._QTONS = regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
+					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
 		else:
-			pass
+			return self._qtons
 
-	def showProgress(self):
+
+	def show_progress(self):
 		print(self._tkr.percent())
 
-	def orientedNormalSurfaceList(self):
-		self._Oriented_QTONS_List()
-		return self._QTONS
 
-	def orientedNormalSurface(self,index):
-		return self.orientedNormalSurfaceList().surface(int(index))
-
-	def eulerChar(self,sn_surface):
+	def euler_char(self,qtons):
 		"""
 		Return the Euler characteristic of the spun normal surface. 
 		Argument can be a surface (Regina oriented spun normal surface) or the index of a surface.
 
-		sage: W.eulerChar(3)    # return Euler characteristic of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W.euler_char(3)    # return Euler characteristic of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
 		-1
 
 		"""
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			return eulerChar(self._QTONS.surface(int(sn_surface)),self._angle_structure)
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+			
+		if ind in self._euler_char:
+			return self._euler_char[ind]
 		else:
-			return eulerChar(sn_surface,self._angle_structure)
+			s = self.qtons().surface(ind)
+			ec = euler_char_(s,self._angle_structure)
+			self._euler_char[ind] = ec
+			return ec
 
-	def boundarySlopes(self,sn_surface):
+
+	def bdy_slopes_unoriented(self,qtons):
 		"""
 		Return the boundary slopes of the spun normal surface. This will be different than the return value
 		of Regina's method boundaryIntersections(), because Regina returns the intersection numbers,
 		not the slope (i.e., Regina's method will be the negative inverse of these slopes). 
 		Argument can be a surface (Regina oriented spun normal surface) or the index of a surface.
 
-		sage: W.boundarySlopes(3)    # return boundary slopes of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W.boundary_slopes(3)    # return boundary slopes of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
 		[(-1, 0), (0, 1), (-1, 0)]
 
 		"""
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			return boundarySlopes(self._QTONS.surface(int(sn_surface)),self.manifold)
-		else:
-			return boundarySlopes(sn_surface,self.manifold)
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
 
-	def _map_to_H1bdy(self,sn_surface):
+		if ind in self._bdy_slopes_unoriented:
+			return self._bdy_slopes_unoriented[ind]
+		else:
+			s = self.qtons().surface(ind)
+			bs = bdy_slopes_unoriented_(s, self)
+			self._bdy_slopes_unoriented[ind] = bs
+			return bs
+
+	def boundary_slopes(self,qtons):
 		"""
 		Return the image of the given surface in H1(\partial M). Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
@@ -148,12 +166,20 @@ class TN_wrapper():
 		[(-1, 0), (0, 1), (-1, 0)]
 
 		"""
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			return Q_to_H1bdy(self._QTONS.surface(int(sn_surface)),self.manifold)
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._map_to_H1bdy:
+			return self._map_to_H1bdy[ind]
 		else:
-			return Q_to_H1bdy(sn_surface,self.manifold)
+			s = self.qtons().surface(ind)
+			h1 = qtons_to_H1bdy(s, self)
+			self._map_to_H1bdy[ind] = h1
+			return h1
 	
-	def mapToH2(self,sn_surface):
+	def map_to_H2(self,qtons):
 		"""
 		Return the image of the given surface in H2(M, \partial M). Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
@@ -162,50 +188,135 @@ class TN_wrapper():
 		(0,1,0)
 
 		"""
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			return homology_map(self._QTONS.surface(int(sn_surface)),self.manifold)
-		else:
-			return homology_map(sn_surface,self.manifold)	
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
 
-	def mapToBall(self,sn_surface):
+		if ind in self._map_to_H2:
+			return self._map_to_H2[ind]
+		else:
+			s = self.qtons().surface(ind)
+			h2 = homology_map(s, self)
+			self._map_to_H2[ind] = h2
+			return h2
+
+	def over_face(self, qtons, as_string=False):
+
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._over_face:
+			f = self._over_face[ind]
+		else:
+			v = self.map_to_H2(ind)
+			f = over_face_(v,self.norm_ball.polyhedron)
+			self._over_face[ind] = f
+		if as_string:
+			return None if f==None else '<{}>'.format(' '.join([str(v.index()) for v in f.vertices()]))
+		else:
+			return f
+
+	def is_norm_minimizing(self, qtons):
+
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._is_norm_minimizing:
+			return self._is_norm_minimizing[ind]
+		else:
+			v = self.map_to_H2(ind)
+			if not self.norm_ball.polyhedron.interior_contains(v):
+				self._is_norm_minimizing[ind] = True
+				return True
+			else:
+				self._is_norm_minimizing[ind] = False
+				return False
+
+	def is_admissible(self, qtons):
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._is_admissible:
+			return self._is_admissible[ind]
+		else:
+			s = self.qtons().surface(ind)
+			mat = oriented_quads_mat(s)
+			for row in mat:
+				nonzero = [i for i in range(0,6,2) if ( row[i]!=0 or row[i+1]!=0 )]
+				if len(nonzero) > 1:
+					self._is_admissible[ind] = False
+					return False
+			self._is_admissible[ind] = True
+			return True
+
+
+	def map_to_ball(self, qtons):
 		"""
 		Return the image of the given surface in H2(M, \partial M), then divide by Euler characteristic. Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
 
 		"""
-		imageInH2 = self.mapToH2(sn_surface)
-		if self.eulerChar(sn_surface) < 0:
-			return tuple([i/(-self.eulerChar(sn_surface)) for i in imageInH2])
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._map_to_ball:
+			return self._map_to_ball[ind]
 		else:
-			return None
+			image_in_H2 = self.map_to_H2(ind)
+			if self.euler_char(ind) < 0:
+				mtb = tuple([Rational(i)/(-self.euler_char(ind)) for i in image_in_H2])
+				self._map_to_ball[ind] = mtb
+				return mtb
+			else:
+				self._map_to_ball[ind] = Infinity
+				return Infinity
 
 
-	def genus(self,sn_surface):
+
+	def genus(self,qtons):
 		"""
 		Return the genus. Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
 
-		sage: W.genus(3)    # return genus of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W.genus(3)    # return genus of the surface with index 3, i.e, W.qtons().surface(3).
 		1
-
 		"""
-		return (2-self.eulerChar(sn_surface)-self.numBoundaryComps(sn_surface))/2
+		return (2-self.euler_char(qtons)-self.num_boundary_comps(qtons))/2
 	
-	def numBoundaryComps(self,sn_surface):
+	def num_bdy_comps_unoriented(self,qtons):
 		"""
 		Return the number of boundary components. Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
 
-		sage: W.numBoundaryComps(3)    # return num of boundary components of surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W.num_boundary_comps(3)    # return num of boundary components of surface with index 3, i.e, W.qtons().surface(3).
 		2
 
 		"""	
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			return numBoundaryComps(self._QTONS.surface(int(sn_surface)))
-		else:
-			return numBoundaryComps(sn_surface)
+		try:
+			ind = int(qtons)
+			s = self.qtons().surface(ind)
+		except TypeError:
+			ind = int(qtons.name())
+			s = qtons
 
-	def numBoundaryCompsH1(self,sn_surface):
+		if ind in self._num_bdy_comps_unoriented:
+			return self._num_bdy_comps_unoriented[ind]
+		else:
+			nbc = num_boundary_comps_unoriented_(s)
+			self._num_bdy_comps_unoriented[ind] = nbc
+			return nbc
+
+
+	def num_boundary_comps(self,qtons):
 		"""
 		Return the number of boundary components after mapping to H1(bdy m). This will be the number
 		of boundary components after cancelling oppositely oriented pairs (i.e., a 3-puntured sphere
@@ -217,52 +328,61 @@ class TN_wrapper():
 		2
 
 		"""	
-		if isinstance(sn_surface,int) or isinstance(sn_surface, Integer):
-			S = self._QTONS.surface(int(sn_surface))
-		else:
-			S = sn_surface
+		try:
+			ind = int(qtons)
+			s = self.qtons().surface(ind)
+		except TypeError:
+			ind = int(qtons.name())
+			s = qtons
 
-		numBoundaryComps = 0
-		b = self._map_to_H1bdy(S)
-		for slope in b:
-			numBoundaryComps += gcd(slope[0],slope[1])
-		return numBoundaryComps
+		if ind in self._num_boundary_comps:
+			return self._num_boundary_comps[ind]
+		else:
+			nbc = 0
+			b = self.boundary_slopes(ind)
+			for slope in b:
+				nbc += gcd(slope[0],slope[1])
+			self._num_boundary_comps[ind] = nbc
+			return nbc
 
 		
 	def _image_in_H2M(self):
 		image = []
-		for i in range(self._index_bound):
-			pt = self.mapToH2(i)
+		for i in range(self.qtons().size()):
+			pt = self.map_to_H2(i)
 			if not pt.is_zero():
-				ec = self.eulerChar(i)
+				ec = self.euler_char(i)
 				if (pt,ec) not in [tup[1:] for tup in image]:
 					image.append((i,pt,ec))
 		return image
 
-#	@cachedproperty
-	def normBallPoints(self):
+	@cached_property
+	def _norm_ball_points(self):
 		"""
 		Return the points in H2(M,bdy M) which are images of (normalized) vertices of the oriented spun
 		normal surface projective solution space with negative Euler characteristic. The convex hull of 
 		these points is the norm ball.
 		"""
-		image = dict()
-		image_on_ball = []
+		points = dict()
+		rays = dict()  # if the Euler char of s is 0 we can't normalize. This means the norm ball is
+		               # infinite in the direction of map_to_H2(s), so it contains the ray (0,map_to_H2(s)).
 		image_w_euler = self._image_in_H2M()
 		image_w_euler.sort(key=lambda x: x[0])
-		image_w_euler.reverse()
+		image_w_euler.reverse() # we sort and reverse so that the normal surface associated to this vertex 
+		                        # is the one of smallest qtons index, among all qtons that map to it.
 		for (i,pt,ec) in image_w_euler:
 			if ec < 0:
-				image_on_ball.append(tuple([coord/(-ec) for coord in pt]))
-				image[tuple([coord/(-ec) for coord in pt])]=i
-		return HashableDict(image)
+				points[tuple([coord/(-ec) for coord in pt])] = i # divide by euler char to normalize
+			elif ec == 0:
+				rays[tuple(pt)] = i
+		return points, rays
 
-
-	def normBall(self,index_bound=None):
+	@cached_property
+	def norm_ball(self):
 		"""
 		Return the norm ball as a sage Polyhedron. Some things you can do:
 
-		sage: B=W.normBall()
+		sage: B=W.norm_ball
 		sage: B.faces(2)        # list the 2-dimensional faces
 		sage: B.faces(0)        # list the 0-dimensional faces (vertices)
 
@@ -274,24 +394,130 @@ class TN_wrapper():
 		The Polyhedron class has a lot of methods, and I have not explored many of them. There is 
 		probably a lot more that would be useful. Use tab completion to explore!
 		"""
-		if index_bound == None:
-			self._index_bound = self._QTONS.size()
+		if not QUIET:
+			print('Computing Thurston norm unit ball... ', end='')
+		pts_dict, rays_dict = self._norm_ball_points
+		if len(rays_dict) != 0:
+			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ)
+			rays = tuple([(rays_dict[tuple(i*vector(v))],i*vector(v)) for v in polyhedron.lines_list() for i in [1,-1]])
+			Rays = [Ray(i,rays[i][0],rays[i][1],self.num_boundary_comps(rays[i][0]), self.euler_char(rays[i][0]), self.boundary_slopes(rays[i][0]), True, self.is_admissible(rays[i][0]),True) for i in range(len(rays))]
+			## the points in vertices are the vertices of polyhedron modulo its rays, 
+			## which are not necessarily points from pts_dict. To find a surface representing
+			## each of these vertices, we need to express them as linear combinations of 
+			## points in pts_dict
+			H2_vecs_dict = dict([(tuple(self.map_to_H2(i)),i) for i in pts_dict.values()])
+			H2_vecs = [vector(vec) for vec in H2_vecs_dict.keys()]
+			QVS = VectorSpace(QQ,polyhedron.dim())
+			possible_bases = [vecs for vecs in itertools.combinations(H2_vecs,polyhedron.dim()) if QVS.span(vecs).dimension()==polyhedron.dim()]
+			top_dim_faces = polyhedron.faces(polyhedron.dim()-1)
+			Vertices = []
+			for k in range(len(polyhedron.vertices())):
+				v = polyhedron.vertices()[k]
+				found = False
+				for face, basis in itertools.product(top_dim_faces, possible_bases):
+					if v in face.vertices() and basis_over_face(basis, polyhedron, face):
+						print(v.vector())
+						print([vert.vector() for vert in face.vertices()], [line.vector() for line in face.lines()], basis)
+						M = Matrix(basis).transpose()
+						sol = M.solve_right(v.vector())
+						print(sol)
+						if sorted(list(sol))[0] >= 0:
+							boundary_slopes = []
+							num_boundary_comps = 0
+							euler_char = 0
+							for i in range(self.manifold.num_cusps()):
+								slope = vector((0,0))
+								for j in range(len(basis)):
+									vec_slope = self.boundary_slopes(H2_vecs_dict[tuple(basis[j])])[i]
+									slope += sol[j]*vector(vec_slope)
+									if i == 0:
+										euler_char += sol[j]*self.euler_char(H2_vecs_dict[tuple(basis[j])])
+								boundary_slopes.append(slope)
+								num_boundary_comps += gcd(slope[0],slope[1])
+							Vertices.append(AdornedVertex(k, None, v.vector(), num_boundary_comps, euler_char, boundary_slopes, False, None, True))
+							found = True
+							break
+				if found == False:
+					Vertices.append(AdornedVertex(k, None, v.vector(), None, None, None, False, None, False))
+
+
+
 		else:
-			self._index_bound = index_bound
-		pts_dict = self.normBallPoints()
-		poly = Polyhedron(vertices=Matrix(pts_dict.keys()))
-		verts = tuple([(pts_dict[tuple(v)],vector(v)) for v in poly.vertices_list()])
-		vertices = VerticesList(tuple([Vertex(i,verts[i][0],verts[i][1],self.numBoundaryCompsH1(verts[i][0]),self.eulerChar(verts[i][0]),self.boundarySlopes(verts[i][0]),self._map_to_H1bdy(verts[i][0])) for i in range(len(verts))]))
-		return NormBall(vertices, poly)
+			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)
+			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
+			Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+			Rays = []
+		ball = TNormBall(Vertices, Rays, polyhedron)
+		if not QUIET:
+			print('Done.')
+		return ball
 
+	@cached_property
+	def dual_norm_ball(self):
+		B = self.norm_ball
+		P = B.polyhedron
+		poly_vertices = []
+		vertices = []
+		for i in range(len(P.faces(P.dim()-1))):
+			face = P.faces(P.dim()-1)[i]
+			e = face.as_polyhedron().equations_list()[0]
+			v = -vector(e[1:])/(e[0])
+			poly_vertices.append(v)
+			vertices.append(DualVertex(i, v, B.facets(P.dim()-1)[i]))
+		P_dual = Polyhedron(vertices=poly_vertices, base_ring=QQ)
+		dual_ball = DualNormBall(vertices, P_dual)
+		return dual_ball
 
+	@cached_property
+	def qtons_info(self):
+		if not QUIET:
+			print('Analyzing quad transversely oriented normal surfaces... ', end='')
+		qtons_info_dict = dict([(i,{}) for i in range(self.qtons().size())])
+		for i in range(self.qtons().size()):
+			qtons_info_dict[i]['image_in_H2'] = self.map_to_H2(i)
+			qtons_info_dict[i]['euler_char'] = self.euler_char(i)
+			qtons_info_dict[i]['boundary_slopes'] = self.boundary_slopes(i)
+			qtons_info_dict[i]['num_boundary_comps'] = self.num_boundary_comps(i)
+			qtons_info_dict[i]['genus'] = (2-self.euler_char(i)-self.num_boundary_comps(i))/2
+			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)
+			qtons_info_dict[i]['over_face'] = self.over_face(i,as_string=True)
+		if not QUIET:
+			print('Done.')
+		return qtons_info_dict
 
+def check_subfaces(ray,f_poly):
+	if f_poly.dim() == 0:
+		return f_poly
+	for f in f_poly.faces(f_poly.dim()-1):
+		if not f.as_polyhedron().intersection(ray).is_empty():
+			return check_subfaces(ray,f.as_polyhedron())
+		else:
+			continue
+	return f_poly
+			
 
+def over_face_(v, P):
+	if v.is_zero():
+		return None
+	else:
+		ray = Polyhedron(rays=[v])
+		f_poly = check_subfaces(ray, P)
+		for i in range(P.dim()):
+			for f in P.faces(i):
+				if sorted([vert.vector() for vert in f.vertices()]) == sorted([vert.vector() for vert in f_poly.vertices()]):
+					return f
 
+def lies_over_face(v, P, face):
+	v_face = over_face_(v, P)
+	if set(v_face.vertices()).issubset(set(face.vertices())) and set(v_face.lines()).issubset(set(face.lines())):
+		return True
+	return False
 
-
-
-
+def basis_over_face(basis, P, face):
+	for vec in basis:
+		if not lies_over_face(vec, P, face):
+			return False
+	return True
 
 
 

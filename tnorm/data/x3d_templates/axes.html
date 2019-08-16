@@ -1,0 +1,114 @@
+<!-- Vertical Y arrow and label --> 
+<Group>
+<Group DEF='ArrowGreen'>
+<Shape>
+<Cylinder DEF='ArrowCylinder' radius='.025' top='false' height={0}>
+</Cylinder> 
+<Appearance DEF='Green'>
+<Material diffuseColor='.1 .6 .1' emissiveColor='.05 .2 .05'>
+</Material>
+</Appearance>
+</Shape> 
+<Transform translation='0 {1} 0'>
+<Shape>
+<Cone DEF='ArrowCone' bottomRadius='.1' height='.3'>
+</Cone> 
+<Appearance USE='Green'>
+</Appearance>
+</Shape>
+</Transform>
+</Group> 
+<Transform translation='0 {2} 0' scale='.5 .5 .5'>
+<Billboard axisOfRotation='0 0 0'>
+<Shape>
+<Appearance DEF='LABEL_APPEARANCE'>
+<Material diffuseColor='1 1 0' emissiveColor='1 1 0' shininess='1.0'>
+</Material>
+</Appearance> 
+<Text string='+y'>
+<FontStyle DEF='LABEL_FONT'>
+</FontStyle>
+</Text>
+</Shape>
+</Billboard>
+</Transform>
+</Group> 
+
+<Transform rotation='0 0 1 -1.57079'>
+
+<!-- Horizontal X arrow and label --> 
+<Group>
+<Group DEF='ArrowRed'>
+<Shape>
+<Cylinder USE='ArrowCylinder'>
+</Cylinder> 
+<Appearance DEF='Red'>
+<Material diffuseColor='.7 .1 .1' emissiveColor='.33 0 0'>
+</Material>
+</Appearance>
+</Shape> 
+<Transform translation='0 {1} 0'>
+<Shape>
+<Cone USE='ArrowCone'>
+</Cone> 
+<Appearance USE='Red'>
+</Appearance>
+</Shape>
+</Transform>
+</Group> 
+<Transform rotation='0 0 1 0' translation='0 {2} 0' scale='.5 .5 .5'>
+<!-- note label rotated back to original coordinate frame --> 
+<Billboard axisOfRotation='0 0 0'>
+<Shape>
+<Appearance USE='LABEL_APPEARANCE'>
+</Appearance> 
+<Text string='+x'>
+<FontStyle USE='LABEL_FONT'>
+</FontStyle>
+</Text>
+</Shape>
+</Billboard>
+</Transform>
+</Group>
+
+</Transform> 
+
+
+<Transform rotation='1 0 0 1.57079'>
+
+<!-- Perpendicular Z arrow and label, note right-hand rule --> 
+<Group>
+<Group DEF='ArrowBlue'>
+<Shape>
+<Cylinder USE='ArrowCylinder'>
+</Cylinder> 
+<Appearance DEF='Blue'>
+<Material diffuseColor='.3 .3 1' emissiveColor='.1 .1 .33'>
+</Material>
+</Appearance>
+</Shape> 
+<Transform translation='0 {1} 0'>
+<Shape>
+<Cone USE='ArrowCone'>
+</Cone> 
+<Appearance USE='Blue'>
+</Appearance>
+</Shape>
+</Transform>
+</Group> 
+<Transform rotation='1 0 0 0' translation='0 {2} 0' scale='.5 .5 .5'>
+<!-- note label rotated back to original coordinate frame --> 
+<Billboard axisOfRotation='0 0 0'>
+<Shape>
+<Appearance USE='LABEL_APPEARANCE'>
+</Appearance> 
+<Text string='+z'>
+<FontStyle USE='LABEL_FONT'>
+</FontStyle>
+</Text>
+</Shape>
+</Billboard>
+</Transform>
+</Group>
+
+</Transform>

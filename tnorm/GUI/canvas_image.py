@@ -2,29 +2,16 @@
 # Advanced zoom for images of various types from small to huge up to several GB
 import math
 import warnings
+from tnorm.GUI.scroll_bars import AutoScrollbar
 import tkinter as tk
 
 from tkinter import ttk
 from PIL import Image, ImageTk
 
-class AutoScrollbar(ttk.Scrollbar):
-    """ A scrollbar that hides itself if it's not needed. Works only for grid geometry manager """
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.grid_remove()
-        else:
-            self.grid()
-            ttk.Scrollbar.set(self, lo, hi)
-
-    def pack(self, **kw):
-        raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
-
-    def place(self, **kw):
-        raise tk.TclError('Cannot use place with the widget ' + self.__class__.__name__)
 
 class CanvasImage:
     """ Display and zoom image """
-    def __init__(self, myapp, path):
+    def __init__(self, tnorm_app, path):
         """ Initialize the ImageFrame """
         self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.__delta = 1.2  # zoom magnitude
@@ -33,7 +20,7 @@ class CanvasImage:
         self.path = path  # path to the image, should be public for outer classes
         # Create ImageFrame in placeholder widget
 
-        self.__imframe = ttk.Frame(myapp.image_frame)  # placeholder of the ImageFrame object
+        self.__imframe = ttk.Frame(tnorm_app.ImageFrame)  # placeholder of the ImageFrame object
         # Vertical and horizontal scrollbars for canvas
         hbar = AutoScrollbar(self.__imframe, orient='horizontal')
         vbar = AutoScrollbar(self.__imframe, orient='vertical')
@@ -43,12 +30,14 @@ class CanvasImage:
         #zoom buttons
 #        self.zoom_frame = ttk.Frame(self.__imframe)
 #        self.zoom_frame.grid(row=0, column=0, rowspan=2, sticky='ns')
-        self.z_plus = ttk.Button(myapp.zoom_frame, text='+', width=1, command=self.__zoom_in)
+        self.z_plus = ttk.Button(tnorm_app.ZoomFrame, text='+', width=1, command=self.__zoom_in, padding=[-20,0,-20,0])
 #        self.z_plus.bind("<Button-1>",self.__zoom_in)
-        self.z_plus.pack(side=tk.TOP,fill=None,expand=False)
-        self.z_minus = ttk.Button(myapp.zoom_frame, text='-', width=1, command=self.__zoom_out)
+        self.z_plus.grid(row=1, column=0, sticky='n')
+        self.z_minus = ttk.Button(tnorm_app.ZoomFrame, text='-', width=1, command=self.__zoom_out, padding=[-20,0,-20,0])
 #        self.z_plus.bind("<Button-1>",self.__zoom_out)
-        self.z_minus.pack(side=tk.TOP, fill=None, expand=False)
+        self.z_minus.grid(row=2, column=0, sticky='s')
+        tnorm_app.ZoomFrame.rowconfigure(0, weight=1)
+        tnorm_app.ZoomFrame.rowconfigure(3, weight=1)
 
 
 
@@ -109,8 +98,8 @@ class CanvasImage:
         self.canvas.focus_set()  # set focus on the canvas
 
         # Below is a hack to get image to load at (approximately) canvas size.
-        myapp.parent.update_idletasks()
-        window_width = float(myapp.parent.winfo_width())
+        tnorm_app.parent.update_idletasks()
+        window_width = float(tnorm_app.parent.winfo_width())
         canvas_width = window_width-227
         total_scale = canvas_width/self.imwidth
         scale=1

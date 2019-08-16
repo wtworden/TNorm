@@ -28,7 +28,7 @@ def regina_to_sage_type(q):
 
 
 
-def get_orientedQuads(oriented_spun_surface,tet,v1,v2):
+def get_oriented_quads(oriented_spun_surface,tet,v1,v2):
     s = oriented_spun_surface
     tet = int(tet)
     v2 = int(v2)

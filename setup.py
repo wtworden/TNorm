@@ -23,6 +23,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/wtworden/TNorm",
     packages=["tnorm"],
+    package_data={
+        'tnorm.GUI': ['images/spinpoly/*'],
+        },
     classifiers=[
          "Programming Language :: Python :: 3",
          "License :: OSI Approved :: MIT License",

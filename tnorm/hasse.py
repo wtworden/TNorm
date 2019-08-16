@@ -1,6 +1,14 @@
+from __future__ import print_function
+
+
+import tnorm.constants
+QUIET = tnorm.constants.QUIET
+
 from tnorm.sage_types import *
 
 def get_hasse(P):
+    if not QUIET:
+        print('Generating Hasse diagram... ', end='')
     G = Graphics()
     FL = P.face_lattice()
     HD = FL.hasse_diagram()
@@ -11,7 +19,8 @@ def get_hasse(P):
 #    HD.set_latex_options(graphic_size=((P.dim()+3)*(w/4.),(P.dim()+3)*(w/6.)), vertex_size=1, edge_thickness=0.05, tkz_style="Shade",vertex_color="red")
     HD = HD.to_undirected()
     verts_by_dim = dict([(i,[v for v in HD.vertices() if v.dim()==i]) for i in range(-1,P.dim()+1)])
-    for i in range(-1,P.dim()+1):
+    min_dimension = min([i for i in verts_by_dim if len(verts_by_dim[i])!=0])
+    for i in range(min_dimension,P.dim()+1):
         subgraph = HD.subgraph(verts_by_dim[i])
         subgraph.set_pos(dict([(v,pos_dict[v]) for v in verts_by_dim[i]]))
         size = size_dict[i]
@@ -26,6 +35,8 @@ def get_hasse(P):
     G+=p
     G.SHOW_OPTIONS['figsize'] = ((P.dim()+3)*(w/6.),(P.dim()+3)*(w/9.))
     G.axes(False)
+    if not QUIET:
+        print('Done.')
     return G
 
 

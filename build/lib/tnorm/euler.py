@@ -9,7 +9,7 @@ from tnorm.matrices import *
 ### compute the euler characteristic. If no angle structure is given, computes
 ### an angle structure to use for computation of Euler characteristic (i.e., the 
 ### second argument is optional). 
-def eulerChar(spun_surface,angle_struct_matrix=None):
+def euler_char_(spun_surface,angle_struct_matrix=None):
     T=spun_surface.triangulation()
     if angle_struct_matrix==None:
         angles = solve_lin_gluingEq(T)

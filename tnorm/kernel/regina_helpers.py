@@ -1,7 +1,6 @@
 
 
 import regina
-
 from tnorm.sage_types import *
 
 
@@ -13,7 +12,6 @@ def get_cusp_index(T,tet,vertex):
 def in_cusp(T,tet,vert,cusp):
     return get_cusp_index(T,tet,vert)==cusp
 
-## 
 
 ### convert regina types (integers, rational, matrices) to sage types
 def regina_to_sage_type(q):
@@ -28,7 +26,8 @@ def regina_to_sage_type(q):
 
 
 
-def get_orientedQuads(oriented_spun_surface,tet,v1,v2):
+def get_oriented_quads(oriented_spun_surface,tet,v1,v2):
+    assert v1 < v2
     s = oriented_spun_surface
     tet = int(tet)
     v2 = int(v2)

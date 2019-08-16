@@ -7,21 +7,6 @@ from tnorm.matrices import *
 
 
 
-def get_orientedQuads(oriented_spun_surface,tet,v1,v2):
-    s = oriented_spun_surface
-    tet = int(tet)
-    v2 = int(v2)
-    if v1 == 0:
-        return regina_to_sage_type(s.orientedQuads(tet,v2-int(1),True))
-    elif v1 == 2:
-        return regina_to_sage_type(s.orientedQuads(tet,int(0),False))
-    elif v2 == 2:
-        return regina_to_sage_type(s.orientedQuads(tet,int(2),False))
-    else:
-        return regina_to_sage_type(s.orientedQuads(tet,int(1),False))
-    return "invalid input"
-
-
 ### this is the old version of Q_to_H1bdy()
 def intersection(cusp,oriented_spun_surface,M):
     s = oriented_spun_surface
@@ -40,16 +25,16 @@ def intersection(cusp,oriented_spun_surface,M):
                 verts.remove(v)
                 verts.remove(f)
                 j,k = verts
-                iota_lambda += mat[0][t][4*v+f]*get_orientedQuads(s,t,j,k)*(-1)
-                iota_mu += mat[1][t][4*v+f]*get_orientedQuads(s,t,j,k)*(-1)
+                iota_lambda += mat[0][t][4*v+f]*get_oriented_quads(s,t,j,k)*(-1)
+                iota_mu += mat[1][t][4*v+f]*get_oriented_quads(s,t,j,k)*(-1)
                 j,k = sorted([v,f])
-                iota_lambda += mat[0][t][4*v+f]*get_orientedQuads(s,t,j,k)
-                iota_mu += mat[1][t][4*v+f]*get_orientedQuads(s,t,j,k)
+                iota_lambda += mat[0][t][4*v+f]*get_oriented_quads(s,t,j,k)
+                iota_mu += mat[1][t][4*v+f]*get_oriented_quads(s,t,j,k)
     return (-iota_lambda,iota_mu)
 
 
 ### this maps an oriented spun normal surface to H_1(bdy M; \ZZ)
-def Q_to_H1bdy(oriented_spun_surface,M=None):
+def qtons_to_H1bdy(oriented_spun_surface,M=None):
     s = oriented_spun_surface
     T = s.triangulation()
     if M == None:
@@ -60,7 +45,7 @@ def Q_to_H1bdy(oriented_spun_surface,M=None):
     slopes = []
     for c in range(T.countCusps()):
         int_mat = intersection_mat(M,T,c)
-        quad_mat = orientedQuads_mat(s)
+        quad_mat = oriented_quads_mat(s)
         iota_lambda = Rational(sum([int_mat[0][i]*s_mat*quad_mat[i] for i in range(T.size())]))
         iota_mu = Rational(sum([int_mat[1][i]*s_mat*quad_mat[i] for i in range(T.size())]))
         slopes.append((-iota_lambda,iota_mu))
@@ -73,7 +58,7 @@ def homology_map(oriented_spun_surface,M=None):
         M = snappy.Manifold(s.triangulation().snapPea())
     else:
         pass
-    slopes = Q_to_H1bdy(s,M)
+    slopes = qtons_to_H1bdy(s,M)
     coords = vector([slopes[i][1] for i in range(len(slopes))])
     return coords
 
