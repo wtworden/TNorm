@@ -10,6 +10,7 @@ import itertools
 
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
+from tnorm.kernel.matrices import intersection_mat, oriented_quads_mat
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
