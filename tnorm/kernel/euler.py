@@ -1,7 +1,7 @@
 
 
 from tnorm.sage_types import *
-from tnorm.regina_helpers import regina_to_sage_type
+from tnorm.kernel.regina_helpers import regina_to_sage_type
 
 
 ### compute the euler characteristic. If no angle structure is given, computes

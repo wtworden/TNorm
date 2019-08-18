@@ -8,7 +8,7 @@ import time
 import itertools
 
 
-from kernel.euler import *
+from tnorm.kernel.euler import *
 from tnorm.kernel.boundary import *
 from tnorm.kernel.homology import *
 from tnorm.kernel.regina_helpers import *
