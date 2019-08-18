@@ -104,7 +104,7 @@ class TNormBall(NormBall):
     def __init__(self, vertices, rays, polyhedron):
         NormBall.__init__(self, vertices, polyhedron)
         self.rays = rays
-        if self.is_compact:
+        if not self.is_compact:
             self.polyhedron_mod_rays = Polyhedron(polyhedron.vertices_list())
         self.num_rays = len(self.polyhedron.rays())+2*len(self.polyhedron.lines())
         self.all_vertices_admissible = True

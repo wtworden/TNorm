@@ -225,11 +225,11 @@ class TNormApp:
 
         # control frame: cancel button frame --------------
 
-        self.CancelButtonFrame = tk.Frame(self.ControlFrame, bg=BG_COLOR)
-        self.CancelButtonFrame.pack(side=BOTTOM, expand=NO, anchor=SW)
+#        self.CancelButtonFrame = tk.Frame(self.ControlFrame, bg=BG_COLOR)
+#        self.CancelButtonFrame.pack(side=BOTTOM, expand=NO, anchor=SW)
 
-        self.CancelButton = ttk.Button(self.CancelButtonFrame, text="Cancel", width=6, command=self.cancel_button_click)
-        self.CancelButton.pack(side=BOTTOM, pady=10)
+#        self.CancelButton = ttk.Button(self.CancelButtonFrame, text="Cancel", width=6, command=self.cancel_button_click)
+#        self.CancelButton.pack(side=BOTTOM, pady=10)
 
 
         # main frame: output frame: notebook frame --------------------
@@ -272,7 +272,7 @@ class TNormApp:
         self.icon_frames = [PhotoImage(file=path.format(i)) for i in range(9)]
 
         self.IconGif = Label(self.IconFrame,image=self.icon_frames[0], bd=-2)
-        self.IconGif.pack()
+        self.IconGif.pack(side=TOP)
 
         # main frame: output frame: status frame: console frame ---------------------------------------------------
 
@@ -320,7 +320,7 @@ class TNormApp:
         self.parent.update_idletasks()
         tab = self.current_tab()
         if tab == self.SummaryTab:
-            self.disable([self.DimEntry, self.OverviewButton, self.VertexListButton, self.FaceListButton, self.FacetButton, self.PolyhedronButton, self.HasseButton])
+            self.disable([self.DimEntry, self.OverviewButton, self.VertexListButton, self.FaceListButton, self.FacetButton, self.PolyhedronButton, self.HasseButton])            
         if tab == self.NormBallTab:
             self.DimEntry.delete(0,END)
             self.enable([self.DimEntry, self.OverviewButton, self.VertexListButton, self.FaceListButton, self.FacetButton, self.PolyhedronButton, self.HasseButton])
@@ -330,6 +330,7 @@ class TNormApp:
                 self.show_overview()
         elif tab == self.DualNormBallTab:
             self.enable([self.DimEntry, self.OverviewButton, self.VertexListButton, self.FaceListButton, self.FacetButton, self.PolyhedronButton, self.HasseButton])
+            self.disable([self.DimEntry, self.FaceListButton, self.FacetButton])
             self.DimEntry.delete(0,END)
             if len(self.DualNormBallTab.winfo_children()) != 0:
                 pass
@@ -429,6 +430,7 @@ class TNormApp:
 
     def load_computations(self, M):
 #        try:
+        self.disable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel, self.OverviewButton])
         self.disable_all_buttons()
         self.disable_all_tabs()
         self.clear_all_tabs()
@@ -437,6 +439,7 @@ class TNormApp:
         self.dual_ball = self.wrapper.dual_norm_ball
         generate_summary(self)
         self.tabs_normal()
+        self.enable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel])
         self.Notebook.select(self.SummaryTab)
 #        except Exception as e: print('Error: {}'.format(e))
         self.stop_spin()
@@ -534,8 +537,8 @@ class TNormApp:
         self.start_spin()
 
 
-    def cancel_button_click(self):
-        self.parent.destroy()
+#    def cancel_button_click(self):
+#        self.parent.destroy()
 
 
     # button bindings for Enter key ----------------------------------

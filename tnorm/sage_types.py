@@ -14,5 +14,6 @@ from sage.all import text3d
 from sage.all import RR
 from sage.all import VectorSpace
 from sage.all import QQ
+from sage.all import lcm
 
 from sage.misc.misc import SAGE_TMP
