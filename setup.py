@@ -24,8 +24,8 @@ setuptools.setup(
     url="https://github.com/wtworden/TNorm",
     packages=['tnorm', 'tnorm.kernel', 'tnorm.GUI'],
     package_data={
-        'tnorm.GUI': ['images/spinpoly/*'],
-        'tnorm': ['data/*']
+        'tnorm.GUI': ['images/spinpoly/*','data/*'],
+        'tnorm': ['data/x3d_templates/*', 'data/x3dom/*'],
         },
     classifiers=[
          "Programming Language :: Python :: 3",
