@@ -22,9 +22,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/wtworden/TNorm",
-    packages=["tnorm"],
+    packages=['tnorm', 'tnorm.kernel', 'tnorm.GUI'],
     package_data={
         'tnorm.GUI': ['images/spinpoly/*'],
+        'tnorm': ['data/*']
         },
     classifiers=[
          "Programming Language :: Python :: 3",
