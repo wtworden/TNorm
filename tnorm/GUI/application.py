@@ -457,7 +457,7 @@ class TNormApp:
 
     def show_welcome(self):
         datadir = os.path.dirname(__file__)
-        path = os.path.join(datadir, 'welcome.txt')
+        path = os.path.join(datadir,'data','welcome.txt')
         with open(path, 'r') as file:
             self.welcome = tk.Text(self.HelpTab, wrap='none', bg="#DADADA", fg="#444444", height=30, width=100, borderwidth=-2, padx=-1, pady=-1, insertwidth=0)
             self.welcome.grid(row=0, column=0, sticky='nswe')
