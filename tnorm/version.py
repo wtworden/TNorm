@@ -5,4 +5,4 @@
 
 Caution: All code in here will be executed by setup.py. '''
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
