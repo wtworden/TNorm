@@ -2,7 +2,8 @@
 from tnorm.sage_types import *
 
 import tnorm.constants
-from tnorm.kernel import oriented_quads_mat, intersection_mat, get_oriented_quads
+from tnorm.kernel.matrices import oriented_quads_mat, intersection_mat
+from tnorm.kernel.regina_helpers import get_oriented_quads
 
 SIGN_MATRIX = tnorm.constants.SIGN_MATRIX
 

@@ -8,11 +8,8 @@ import time
 import itertools
 
 
-from tnorm.kernel import solve_lin_gluingEq, euler_char_, qtons_to_H1bdy, homology_map
-#from tnorm.kernel.boundary import *
-#from tnorm.kernel.homology import *
-#from tnorm.kernel.regina_helpers import *
-#from tnorm.kernel.matrices import *
+from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
+from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
