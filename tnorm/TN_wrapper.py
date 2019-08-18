@@ -8,11 +8,11 @@ import time
 import itertools
 
 
-from tnorm.kernel.euler import *
-from tnorm.kernel.boundary import *
-from tnorm.kernel.homology import *
-from tnorm.kernel.regina_helpers import *
-from tnorm.kernel.matrices import *
+from tnorm.kernel import solve_lin_gluingEq, euler_char_, qtons_to_H1bdy, homology_map
+#from tnorm.kernel.boundary import *
+#from tnorm.kernel.homology import *
+#from tnorm.kernel.regina_helpers import *
+#from tnorm.kernel.matrices import *
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
@@ -63,12 +63,10 @@ class TN_wrapper():
 
 		# qtons memoization caches-----
 		self._euler_char = {}
-		self._bdy_slopes_unoriented = {}
 		self._map_to_H1bdy = {}
 		self._map_to_ball = {}
 		self._map_to_H2 = {}
 		self._num_boundary_comps = {}
-		self._num_bdy_comps_unoriented = {}
 		self._over_face = {}
 		self._is_norm_minimizing = {}
 		self._is_admissible = {}
@@ -131,31 +129,6 @@ class TN_wrapper():
 			ec = euler_char_(s,self._angle_structure)
 			self._euler_char[ind] = ec
 			return ec
-
-
-	def bdy_slopes_unoriented(self,qtons):
-		"""
-		Return the boundary slopes of the spun normal surface. This will be different than the return value
-		of Regina's method boundaryIntersections(), because Regina returns the intersection numbers,
-		not the slope (i.e., Regina's method will be the negative inverse of these slopes). 
-		Argument can be a surface (Regina oriented spun normal surface) or the index of a surface.
-
-		sage: W.boundary_slopes(3)    # return boundary slopes of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		[(-1, 0), (0, 1), (-1, 0)]
-
-		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._bdy_slopes_unoriented:
-			return self._bdy_slopes_unoriented[ind]
-		else:
-			s = self.qtons().surface(ind)
-			bs = bdy_slopes_unoriented_(s, self)
-			self._bdy_slopes_unoriented[ind] = bs
-			return bs
 
 	def boundary_slopes(self,qtons):
 		"""
@@ -256,7 +229,6 @@ class TN_wrapper():
 			self._is_admissible[ind] = True
 			return True
 
-
 	def map_to_ball(self, qtons):
 		"""
 		Return the image of the given surface in H2(M, \partial M), then divide by Euler characteristic. Argument can be a surface (regina oriented
@@ -280,8 +252,6 @@ class TN_wrapper():
 				self._map_to_ball[ind] = Infinity
 				return Infinity
 
-
-
 	def genus(self,qtons):
 		"""
 		Return the genus. Argument can be a surface (regina oriented
@@ -291,30 +261,6 @@ class TN_wrapper():
 		1
 		"""
 		return (2-self.euler_char(qtons)-self.num_boundary_comps(qtons))/2
-	
-	def num_bdy_comps_unoriented(self,qtons):
-		"""
-		Return the number of boundary components. Argument can be a surface (regina oriented
-		spun normal surface) or the index of a surface.
-
-		sage: W.num_boundary_comps(3)    # return num of boundary components of surface with index 3, i.e, W.qtons().surface(3).
-		2
-
-		"""	
-		try:
-			ind = int(qtons)
-			s = self.qtons().surface(ind)
-		except TypeError:
-			ind = int(qtons.name())
-			s = qtons
-
-		if ind in self._num_bdy_comps_unoriented:
-			return self._num_bdy_comps_unoriented[ind]
-		else:
-			nbc = num_boundary_comps_unoriented_(s)
-			self._num_bdy_comps_unoriented[ind] = nbc
-			return nbc
-
 
 	def num_boundary_comps(self,qtons):
 		"""

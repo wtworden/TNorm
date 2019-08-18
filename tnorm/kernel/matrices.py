@@ -1,6 +1,6 @@
 
 from tnorm.sage_types import *
-from tnorm.kernel.regina_helpers import get_oriented_quads, in_cusp
+from tnorm.kernel import get_oriented_quads, in_cusp
 
 
 ### for given cusp, return the matrix that gives intersection data for longitude and meridian.
