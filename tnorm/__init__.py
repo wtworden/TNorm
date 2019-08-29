@@ -1,6 +1,7 @@
 name = "tnorm"
 
-load_attach_path().remove('/Applications/Regina.app/Contents/MacOS/python')
+import sys
+sys.path.remove('/Applications/Regina.app/Contents/MacOS/python')
 
 from tnorm.version import __version__
 
