@@ -1,5 +1,7 @@
 name = "tnorm"
 
+load_attach_path().remove('/Applications/Regina.app/Contents/MacOS/python')
+
 from tnorm.version import __version__
 
 import tnorm.kernel
