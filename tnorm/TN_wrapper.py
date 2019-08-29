@@ -1,7 +1,6 @@
 #-*-python-*-
 from __future__ import print_function
 
-import regina
 
 
 import snappy
@@ -9,8 +8,8 @@ import sys
 import time
 import itertools
 
-#import imp
-#regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages')
+import imp
+regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages')
 
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
