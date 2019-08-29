@@ -1,7 +1,10 @@
 name = "tnorm"
 
 import sys
-sys.path.remove('/Applications/Regina.app/Contents/MacOS/python')
+try:
+    sys.path.remove('/Applications/Regina.app/Contents/MacOS/python')
+except ValueError:
+    pass
 
 from tnorm.version import __version__
 
