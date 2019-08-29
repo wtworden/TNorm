@@ -9,7 +9,7 @@ import time
 import itertools
 
 import imp
-regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages')
+regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
