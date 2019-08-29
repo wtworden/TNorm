@@ -1,6 +1,8 @@
-import imp
 
-regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages')
+import regina
+
+#import imp
+#regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages')
 from tnorm.sage_types import *
 
 
