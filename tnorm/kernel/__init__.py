@@ -3,6 +3,7 @@ from . import euler
 from . import homology
 from . import matrices
 from . import regina_helpers
+from . import boundary
 
 #from euler import euler_char_, solve_lin_gluingEq
 #from homology import qtons_to_H1bdy, homology_map
