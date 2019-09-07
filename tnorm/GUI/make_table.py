@@ -11,8 +11,8 @@ from math import ceil
 def make_qtons_table(tnorm_app):
     try:
         qd = tnorm_app.wrapper.qtons_info
-        treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], str(qd[i]['boundary_slopes']), qd[i]['num_boundary_comps'], qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_face']) for i in qd]
-        column_names = ('qtons index', 'image in H2', 'euler char', 'boundary slopes', 'num bdy comps', 'genus','norm minimizing?','over face')
+        treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], str(qd[i]['boundary_slopes']), qd[i]['num_boundary_comps'], qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_face'], qd[i]['regina_bdy_slopes'], qd[i]['regina_oriented']) for i in qd]
+        column_names = ('qtons index', 'image in H2', 'euler char', 'boundary slopes', 'num bdy comps', 'genus','norm minimizing?','over face','regina_bdy_slopes','regina_oriented')
         make_treeview_table(tnorm_app.QtonsTab,treedata,column_names, True)
     except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
@@ -30,10 +30,10 @@ def make_vertices_table(tnorm_app, frame, vert_list, with_scrollbar=True):
     if vert_list == 'all':
         vert_list = range(len(B.vertices))
     height = len(vert_list)
-    width = 6
+    width = 9
     verts = {i:B.vertices[i] for i in vert_list}
-    column_names = ('vertex','coords','euler char', 'boundary slopes', 'qtons surface')
-    treedata = [(i,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps)) for i in vert_list]
+    column_names = ('vertex','qtons index','coords','euler char', 'boundary slopes', 'qtons surface', 'regina bdy slopes','regina oriented?')
+    treedata = [(i,verts[i].surface_index,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps), W.regina_bdy_slopes(verts[i].surface_index), W.regina_oriented(verts[i].surface_index)) for i in vert_list]
     make_treeview_table(frame, treedata, column_names, with_scrollbar)
 
 def make_facets_table(tnorm_app, frame, dim):

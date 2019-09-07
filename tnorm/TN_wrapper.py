@@ -11,6 +11,7 @@ import itertools
 #import imp
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
+from tnorm.kerner.boundary import bdy_slopes_unoriented_
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
 from tnorm.kernel.matrices import intersection_mat, oriented_quads_mat
@@ -152,6 +153,24 @@ class TN_wrapper():
 			h1 = qtons_to_H1bdy(s, self)
 			self._map_to_H1bdy[ind] = h1
 			return h1
+
+	def regina_bdy_slopes(self,qtons):
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+		s = self.qtons().surface(ind)
+
+		return bdy_slopes_unoriented_(s)
+
+	def regina_oriented(self,qtons):
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+		s = self.qtons().surface(ind)
+
+		return s.isOrientable()
 	
 	def map_to_H2(self,qtons):
 		"""
@@ -416,6 +435,8 @@ class TN_wrapper():
 			qtons_info_dict[i]['genus'] = (2-self.euler_char(i)-self.num_boundary_comps(i))/2
 			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)
 			qtons_info_dict[i]['over_face'] = self.over_face(i,as_string=True)
+			qtons_info_dict[i]['regina_bdy_slopes'] = self.regina_bdy_slopes(i)
+			qtons_info_dict[i]['regina_oriented'] = self.regina_oriented(i)
 		if not QUIET:
 			print('Done.')
 		return qtons_info_dict
