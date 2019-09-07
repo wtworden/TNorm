@@ -3,10 +3,10 @@ import tnorm.constants
 import tnorm.kernel.matrices
 import tnorm.kernel.regina_helpers
 
-intersection_mat = tnorm.kernel.matrices.intersection_mat
-oriented_quads_mat = tnorm.kernel.matrices.oriented_quads_mat
-regina_to_sage_type = tnorm.kernel.regina_helpers.regina_to_sage_type
-ABS_SIGN_MATRIX = tnorm.constants.ABS_SIGN_MATRIX
+from tnorm.kernel.matrices import oriented_quads_mat, intersection_mat
+from tnorm.kernel.regina_helpers import regina_to_sage_type
+
+from tnorm.constants import ABS_SIGN_MATRIX
 
 from tnorm.sage_types import *
 
