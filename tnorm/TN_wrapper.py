@@ -8,19 +8,25 @@ import sys
 import time
 import itertools
 
+
 #import imp
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
+from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2
 from tnorm.kernel.boundary import bdy_slopes_unoriented_
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
 from tnorm.kernel.matrices import intersection_mat, oriented_quads_mat
+from tnorm.kernel.regina_helpers import regina_to_sage_int
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
 from tnorm.x3d_to_html import *
 
 import tnorm.constants
+
+#from sympy import Matrix
+#from sympy import Rational as QQ
 
 QUIET = tnorm.constants.QUIET
 
@@ -34,47 +40,71 @@ class TN_wrapper():
 	sage: W = TN_wrapper(SnapPeaTri)
 
 	SnapPeaTri can be any of the following:
-	(1) A snappy Manifold
+	(1) A snappy Manifold or Triangulation
 	(2) a regina.SnapPeaTriangulation triangulation
 	(3) Any string argument that snappy.Manifold() can take, e.g.,
 
 	sage: W = TN_wrapper('L6a5')
 	sage: W = TN_wrapper('/path/to/snappy/file.tri')
 	sage: W = TN_wrapper(string)       # where string is the triangulation encoded as a string (i.e., contents of a tri file)
-
+	
 	"""
-	def __init__(self, SnapPeaTri, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, basis='natural'):
-		self.H1_basis = basis
+	def __init__(self, manifold, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, basis='natural', force_simplicial_homology=False):
 		
-		if isinstance(SnapPeaTri,str):
-			self.manifold = snappy.Manifold(SnapPeaTri)
-		elif isinstance(SnapPeaTri, regina.engine.SnapPeaTriangulation):
-			self.manifold = snappy.Manifold(SnapPeaTri.snapPea())
-		elif isinstance(SnapPeaTri, snappy.Manifold):
-			self.manifold = SnapPeaTri
-		
-		if self.H1_basis == 'shortest':
-			self.manifold.set_peripheral_curves('shortest')
-		self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
-		self._angle_structure = solve_lin_gluingEq(self.triangulation)
-		self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
+		if isinstance(manifold,str):
+			self.manifold = snappy.Manifold(manifold).filled_triangulation()
+		elif isinstance(manifold, regina.engine.SnapPeaTriangulation):
+			self.manifold = snappy.Manifold(manifold.snapPea())
+		elif isinstance(manifold, regina.engine.Triangulation3):
+			self.manifold = snappy.Manifold(manifold.snapPea())
+		elif isinstance(manifold, snappy.Manifold):
+			self.manifold = manifold.filled_triangulation()
+		elif isinstance(manifold, snappy.Triangulation):
+			self.manifold = manifold
+
+		self.num_cusps = self.manifold.num_cusps()
+		if self.num_cusps != 0:
+			try: 
+				L = self.manifold.link()
+				self.knows_link_complement = True
+			except ValueError:
+				self.knows_link_complement = False
+			if self.knows_link_complement and basis == 'natural':
+				self.H1_basis = 'natural'
+			else:
+				self.manifold.set_peripheral_curves('shortest')
+				self.H1_basis = 'shortest'
+
+			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
+			self._angle_structure = solve_lin_gluingEq(self.triangulation)
+			self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
+			self.manifold_is_closed = False
+		else:
+			self.triangulation = regina.Triangulation3(self.manifold._to_string())
+			self.manifold_is_closed = True
+
+
 		self._qtons = qtons
 		self._tkr = False
 		self.allows_non_admissible = allows_non_admissible
+		self.is_fibered = 'unknown'
+		self.betti = self.triangulation.homologyH1().rank()
 		QUIET = quiet
 
 		# qtons memoization caches-----
 		self._euler_char = {}
-		self._map_to_H1bdy = {}
 		self._map_to_ball = {}
 		self._map_to_H2 = {}
 		self._num_boundary_comps = {}
 		self._over_face = {}
 		self._is_norm_minimizing = {}
 		self._is_admissible = {}
-
-		if not QUIET:			
+		if self.manifold.num_cusps() > 0:
+			self._map_to_H1bdy = {}
+			self._regina_bdy_slopes = {}
+		if not QUIET:		
 			print('Enumerating quad transversely oriented normal surfaces (qtons)... ', end='')
+			sys.stdout.flush()
 		if tracker:
 			self._tkr = regina.ProgressTracker()
 		self._qtons = self.qtons()
@@ -82,6 +112,48 @@ class TN_wrapper():
 			self._qtons.surface(i).setName(str(i))
 		if not QUIET:
 			print('Done.')
+
+		# if the manifold has internal homology then we need to use simplicial homology.
+		if self.manifold.homology().rank() > self.manifold.num_cusps() or force_simplicial_homology:
+			self.has_internal_homology = True
+			self.uses_simplicial_homology = True
+			if not QUIET:
+				print('computing simplicial homology...')
+				sys.stdout.flush()
+
+			self._face_map_to_C2 = get_face_map_to_C2(self.triangulation)
+			self._quad_map_to_C2 = get_quad_map_to_C2(self.triangulation, self._face_map_to_C2)
+			H2_basis_in_C2, P, qtons_image = H2_as_subspace_of_C2(self, self._face_map_to_C2, self._quad_map_to_C2)
+			self._project_to_im_del3 = P
+			self._qtons_image_in_C2 = qtons_image
+			assert len(H2_basis_in_C2) == self.betti
+			I = Matrix.identity(self.betti)
+			B = Matrix(H2_basis_in_C2).transpose()
+			A = B.solve_left(I)
+			self._map_H2_to_standard_basis = A
+			if not QUIET:
+				print('Done.')
+				sys.stdout.flush()
+		else:
+			self.uses_simplicial_homology = False
+
+	# need to make this work for qtons without index. I.e., a linear combo of vertex normal surfaces.
+	def _simplicial_map_to_H2(self,qtons):
+		if self.uses_simplicial_homology:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+			if ind in self._map_to_H2:
+				return self._map_to_H2[ind]
+			else:
+				s_H2 = self._map_H2_to_standard_basis*(self._qtons_image_in_C2[ind]-self._project_to_im_del3*self._qtons_image_in_C2[ind])
+				self._map_to_H2[ind] = s_H2
+				return s_H2
+		else:
+			return None
+
+
 
 	def qtons(self):
 		"""
@@ -128,50 +200,54 @@ class TN_wrapper():
 			return self._euler_char[ind]
 		else:
 			s = self.qtons().surface(ind)
-			ec = euler_char_(s,self._angle_structure)
+			if not self.manifold_is_closed:
+				ec = euler_char_(s,self._angle_structure)
+			else:
+				ec = regina_to_sage_int(s.eulerChar())
 			self._euler_char[ind] = ec
 			return ec
 
-	def boundary_slopes(self,qtons):
+	def boundary_slopes(self,qtons,quad_mat=None):
 		"""
 		Return the image of the given surface in H1(\partial M). Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
 
 		sage: W._map_to_H1bdy(3)    # return image in H1(\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
 		[(-1, 0), (0, 1), (-1, 0)]
-
 		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._map_to_H1bdy:
-			return self._map_to_H1bdy[ind]
+		if self.manifold_is_closed:
+			return []
 		else:
-			s = self.qtons().surface(ind)
-			h1 = qtons_to_H1bdy(s, self)
-			self._map_to_H1bdy[ind] = h1
-			return h1
-
-	def regina_bdy_slopes(self,qtons):
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-		s = self.qtons().surface(ind)
-
-		return bdy_slopes_unoriented_(s)
-
-	def regina_oriented(self,qtons):
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-		s = self.qtons().surface(ind)
-
-		return s.isOrientable()
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
 	
+			if ind in self._map_to_H1bdy:
+				return self._map_to_H1bdy[ind]
+			else:
+				s = self.qtons().surface(ind)
+				h1 = qtons_to_H1bdy(s, self,quad_mat)
+				self._map_to_H1bdy[ind] = h1
+				return h1
+
+	def regina_bdy_slopes(self,qtons,quad_mat=None):
+		if self.manifold_is_closed:
+			return []
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if ind in self._regina_bdy_slopes:
+				return self._regina_bdy_slopes[ind]
+			else:
+				s = self.qtons().surface(ind)
+				rbs = bdy_slopes_unoriented_(s, self,quad_mat)
+				self._regina_bdy_slopes[ind] = rbs
+				return rbs
+
 	def map_to_H2(self,qtons):
 		"""
 		Return the image of the given surface in H2(M, \partial M). Argument can be a surface (regina oriented
@@ -181,18 +257,23 @@ class TN_wrapper():
 		(0,1,0)
 
 		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._map_to_H2:
-			return self._map_to_H2[ind]
+		if not self.uses_simplicial_homology:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if ind in self._map_to_H2:
+				return self._map_to_H2[ind]
+			else:
+				s = self.qtons().surface(ind)
+				slopes = self.boundary_slopes(s)
+				s_H2 = vector([slopes[i][1] for i in range(len(slopes))])
+				self._map_to_H2[ind] = s_H2
+				return s_H2
 		else:
-			s = self.qtons().surface(ind)
-			h2 = homology_map(s, self)
-			self._map_to_H2[ind] = h2
-			return h2
+			return self._simplicial_map_to_H2(qtons)
+
 
 	def over_face(self, qtons, as_string=False):
 
@@ -230,6 +311,9 @@ class TN_wrapper():
 				self._is_norm_minimizing[ind] = False
 				return False
 
+	def locally_compatible(self,qtons1,qtons2):
+		pass
+
 	def is_admissible(self, qtons):
 		try:
 			ind = int(qtons)
@@ -265,12 +349,12 @@ class TN_wrapper():
 		else:
 			image_in_H2 = self.map_to_H2(ind)
 			if self.euler_char(ind) < 0:
-				mtb = tuple([Rational(i)/(-self.euler_char(ind)) for i in image_in_H2])
+				mtb = tuple([QQ(i)/(-self.euler_char(ind)) for i in image_in_H2])
 				self._map_to_ball[ind] = mtb
 				return mtb
 			else:
-				self._map_to_ball[ind] = Infinity
-				return Infinity
+				self._map_to_ball[ind] = float('inf')
+				return float('inf')
 
 	def genus(self,qtons):
 		"""
@@ -318,9 +402,36 @@ class TN_wrapper():
 			pt = self.map_to_H2(i)
 			if not pt.is_zero():
 				ec = self.euler_char(i)
-				if (pt,ec) not in [tup[1:] for tup in image]:
-					image.append((i,pt,ec))
+				#if (pt,ec) not in [tup[1:] for tup in image]:
+				image.append((i,pt,ec))
 		return image
+
+#	@cached_property
+#	def _norm_ball_points(self):
+#		"""
+#		Return the points in H2(M,bdy M) which are images of (normalized) vertices of the oriented spun
+#		normal surface projective solution space with negative Euler characteristic. The convex hull of 
+#		these points is the norm ball.
+#		"""
+#		points = dict()
+#		rays = dict()  # if the Euler char of s is 0 we can't normalize. This means the norm ball is
+#		               # infinite in the direction of map_to_H2(s), so it contains the ray (0,map_to_H2(s)).
+#		image_w_euler = self._image_in_H2M()
+#
+#		for (i,pt,ec) in image_w_euler:
+#			if ec < 0:
+#				quad_mat = oriented_quads_mat(self.qtons().surface(i))
+#				normalized = tuple([coord/(-ec) for coord in pt])
+#				if normalized not in points:
+#					points[tuple([coord/(-ec) for coord in pt])] = i # divide by euler char to normalize
+#				elif self.boundary_slopes(i,quad_mat) == self.regina_bdy_slopes(i,quad_mat):
+#					points[tuple([coord/(-ec) for coord in pt])] = i
+#				elif abs_slopes(self.boundary_slopes(i)) == abs_slopes(self.regina_bdy_slopes(i)):
+#					if not self.boundary_slopes(points[normalized]) == self.regina_bdy_slopes(points[normalized]):
+#						points[tuple([coord/(-ec) for coord in pt])] = i
+#			elif ec == 0:
+#				rays[tuple(pt)] = i
+#		return points, rays
 
 	@cached_property
 	def _norm_ball_points(self):
@@ -329,18 +440,38 @@ class TN_wrapper():
 		normal surface projective solution space with negative Euler characteristic. The convex hull of 
 		these points is the norm ball.
 		"""
-		points = dict()
+		points0 = dict()
 		rays = dict()  # if the Euler char of s is 0 we can't normalize. This means the norm ball is
 		               # infinite in the direction of map_to_H2(s), so it contains the ray (0,map_to_H2(s)).
 		image_w_euler = self._image_in_H2M()
-		image_w_euler.sort(key=lambda x: x[0])
-		image_w_euler.reverse() # we sort and reverse so that the normal surface associated to this vertex 
-		                        # is the one of smallest qtons index, among all qtons that map to it.
+
 		for (i,pt,ec) in image_w_euler:
 			if ec < 0:
-				points[tuple([coord/(-ec) for coord in pt])] = i # divide by euler char to normalize
+				normalized = tuple([coord/(-ec) for coord in pt]) # divide by euler char to normalize
+
+				if not self.uses_simplicial_homology:
+					if normalized not in points0:
+						points0[normalized] = (i,0) 
+					elif points0[normalized][1] == 2:
+						continue
+						
+					bs = self.boundary_slopes(i)
+					rbs = self.regina_bdy_slopes(i)
+					d = gcd([gcd(s) for s in bs])				
+	
+					if d==1 and bs==rbs:
+						points0[normalized] = (i,2) 
+					elif d==1:
+						points0[normalized] = (i,1) 
+				else:
+					if normalized not in points0:
+						points0[normalized] = (i,0)
+					else:
+						continue
+
 			elif ec == 0:
 				rays[tuple(pt)] = i
+		points = dict([(key,points0[key][0]) for key in points0])
 		return points, rays
 
 	@cached_property
@@ -362,7 +493,13 @@ class TN_wrapper():
 		"""
 		if not QUIET:
 			print('Computing Thurston norm unit ball... ', end='')
+			sys.stdout.flush()
+
 		pts_dict, rays_dict = self._norm_ball_points
+
+		### If M is not hyperbolic then rays_dict should be non-empty, and the norm ball should be non-compact. 
+		### The below attempts to compute the non-compact norm ball, but it may be wrong. This is because (it seems) 
+		### some surfaces may not be realized as spun normal surfaces.
 		if len(rays_dict) != 0:
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
 			rays = tuple([(rays_dict[tuple(i*vector(v))],i*vector(v)) for v in polyhedron.lines_list() for i in [1,-1]])
@@ -399,9 +536,67 @@ class TN_wrapper():
 		else:
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)
 			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
-			Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+			if not self.manifold_is_closed:
+				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+			else:
+				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],0, self.euler_char(vertices[i][0]), [], False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+
 			Rays = []
 		ball = TNormBall(Vertices, Rays, polyhedron)
+		if self.num_cusps == 1 and self.betti == 1:
+			A = self.manifold.alexander_polynomial()
+			A_norm = QQ(A.degree() - 1)
+			print(A_norm)
+			try:
+				v=ball.vertices[0]
+			except IndexError:
+				pass
+			if A_norm <= 0 or not A.is_monic():
+				self.is_fibered = False
+				ball.confirmed = True
+
+			elif len(ball.vertices)==0 or A_norm > abs(v.euler_char):
+				self.is_fibered = True
+				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
+				Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False)]
+				ball = TNormBall(Vertices, Rays, polyhedron)
+				ball.confirmed = True
+			elif A_norm == abs(v.euler_char):
+				self.is_fibered = 'unknown'
+				ball.confirmed = True
+			elif A_norm < abs(v.euler_char):
+				M = self.manifold.copy()
+				p,q = v.boundary_slopes[0]
+				d = gcd(p,q)
+				M.dehn_fill((p/d,q/d))
+				Mf = M.filled_triangulation()
+				T = regina.Triangulation3(Mf._to_string())
+				ns = regina.NormalSurfaces.enumerate(T,regina.NS_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
+				print(ns.size())
+				non_trivial = [i for i in range(ns.size()) if ns.surface(i).isOrientable()]
+				print(len(non_trivial))
+				if len(non_trivial)>1:
+					non_trivial = [i for i in non_trivial if ns.surface(i).cutAlong().isConnected()]
+					print(len(non_trivial))
+				if len(non_trivial) == 0: ## something is wrong!
+					print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
+					ball.confirmed = False
+				elif len(non_trivial) >= 1:
+					genus = min([(2-regina_to_sage_int(ns.surface(i).eulerChar()))/2 for i in non_trivial])
+					print(2*genus - 2 + 1)
+					if 2*genus - 2 + 1 == abs(v.euler_char):
+						self.is_fibered = False
+						ball.confirmed = True
+					elif 2*genus - 2 + 1 == A_norm:
+						self.is_fibered == True
+						polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
+						Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False)]
+						ball = TNormBall(Vertices, Rays, polyhedron)
+						ball.confirmed = True
+					else:
+						print('hello')
+						print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
+						ball.confirmed = False
 		if not QUIET:
 			print('Done.')
 		return ball
@@ -435,8 +630,7 @@ class TN_wrapper():
 			qtons_info_dict[i]['genus'] = (2-self.euler_char(i)-self.num_boundary_comps(i))/2
 			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)
 			qtons_info_dict[i]['over_face'] = self.over_face(i,as_string=True)
-			qtons_info_dict[i]['regina_bdy_slopes'] = self.regina_bdy_slopes(i)
-			qtons_info_dict[i]['regina_oriented'] = self.regina_oriented(i)
+			qtons_info_dict[i]['spinning_slopes'] = self.regina_bdy_slopes(i)
 		if not QUIET:
 			print('Done.')
 		return qtons_info_dict
@@ -492,9 +686,11 @@ def orthogonal_proj(v, rays):
 		v = v*l
 	return v, coeffs
 
+def abs_slopes(slopes):
+	return [tuple([abs(int(c)) for c in s]) for s in slopes]
 
-
-
+def int_slopes(slopes):
+	return [tuple([int(c) for c in s]) for s in slopes]
 
 
 

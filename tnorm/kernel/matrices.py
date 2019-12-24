@@ -1,5 +1,6 @@
 
 from tnorm.sage_types import *
+#from sympy import Matrix as Matrix
 from tnorm.kernel.regina_helpers import get_oriented_quads, in_cusp
 
 
@@ -60,4 +61,8 @@ def sign_matrix():
                    [0, 0,-1, 1, 0, 0],
                    [-1, 1, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0, 0]])
+
+def dot_product(v,w):
+    return v.dot_product(w)
+
                   

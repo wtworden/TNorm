@@ -1,31 +1,40 @@
-
+#from sympy import Rational as QQ
 from tnorm.sage_types import *
 
 import tnorm.constants
-from tnorm.kernel.matrices import oriented_quads_mat, intersection_mat
+from tnorm.kernel.matrices import oriented_quads_mat, intersection_mat, dot_product
 from tnorm.kernel.regina_helpers import get_oriented_quads
 
 SIGN_MATRIX = tnorm.constants.SIGN_MATRIX
 
 
 ### this maps an oriented spun normal surface to H_1(bdy M; \ZZ)
-def qtons_to_H1bdy(oriented_spun_surface, TN_wrapper=None):
+def qtons_to_H1bdy(oriented_spun_surface, TN_wrapper, quad_mat=None):
     s = oriented_spun_surface
     T = s.triangulation()
-    if TN_wrapper == None:  # If we have already computed these thing, don't do it again.
-        M = snappy.Manifold(T.snapPea())
-        int_matrices = [intersection_mat(M, T, cusp) for cusp in range(T.countCusps())]
-    else:
-        M = TN_wrapper.manifold
-        int_matrices = TN_wrapper._intersection_matrices
+
+    M = TN_wrapper.manifold
+    int_matrices = TN_wrapper._intersection_matrices
 
     sign_mat = SIGN_MATRIX  # SIGN_MATRIX encodes how the transverse orientation
     slopes = []                   # on a surface affects boundary orientations.
     for c in range(T.countCusps()):
         int_mat = int_matrices[c] # get the matrix that encodes meridian and longitude for cusp c.
-        quad_mat = oriented_quads_mat(s) # get the matrix that encodes quad coordinates for s.
-        iota_lambda = Rational(sum([int_mat[0][i]*sign_mat*quad_mat[i] for i in range(T.size())]))
-        iota_mu = Rational(sum([int_mat[1][i]*sign_mat*quad_mat[i] for i in range(T.size())]))
+        if quad_mat == None:
+            quad_mat = oriented_quads_mat(s) # get the matrix that encodes quad coordinates for s.
+        
+        #iota_lambda = sum([Integer(int_mat[0][i]*sign_mat*quad_mat[i]) for i in range(T.size())])
+        #iota_mu = sum([Integer(int_mat[1][i]*sign_mat*quad_mat[i]) for i in range(T.size())])
+        iota_lambda=0
+        iota_mu=0
+        for i in range(T.size()):
+            iota_lambda += Integer(int_mat[0][i]*sign_mat*quad_mat[i])
+            iota_mu += Integer(int_mat[1][i]*sign_mat*quad_mat[i])
+
+        ##### for sympy implementation
+        #iota_lambda = QQ(sum([dot_product((int_mat[0].row(i)*sign_mat),quad_mat.row(i)) for i in range(T.size())]))
+        #iota_mu = QQ(sum([dot_product((int_mat[1].row(i)*sign_mat),quad_mat.row(i)) for i in range(T.size())]))
+        
         slopes.append((-iota_lambda,iota_mu))
     return slopes
 

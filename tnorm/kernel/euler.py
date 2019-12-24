@@ -1,7 +1,7 @@
-
+#from sympy import Matrix as Matrix
 
 from tnorm.sage_types import *
-from tnorm.kernel.regina_helpers import regina_to_sage_type
+from tnorm.kernel.regina_helpers import regina_to_sage_int, regina_to_sage_mat
 
 
 ### compute the euler characteristic. If no angle structure is given, computes
@@ -17,7 +17,7 @@ def euler_char_(spun_surface,angle_struct_matrix=None):
     ec = 0
     for i in range(tets):
         for j in range(3):
-            ec -= angles[i][j]*regina_to_sage_type(spun_surface.quads(int(i),int(j)))
+            ec -= angles[i][j]*regina_to_sage_int(spun_surface.quads(int(i),int(j)))
     return ec
 
 
@@ -26,17 +26,28 @@ def euler_char_(spun_surface,angle_struct_matrix=None):
 ### solve the linear gluing equations, including the linear part of the holonomy
 ### equations for meridians and longitudes. Returns a sage Matrix.
 def solve_lin_gluingEq(T):
-    GE = regina_to_sage_type(T.gluingEquations())
+    GE = regina_to_sage_mat(T.gluingEquations())
     for i in range(T.size()):
         # append equations log(z1)+log(z2)+log(z3)=\pi
         GE = GE.insert_row(GE.dimensions()[0],[Integer(0) for j in range(3*i)]+[Integer(1) for j in range(3)] + [Integer(0) for j in range(3*T.size()-3*(i+1))])
+        
+        ##### for sympy implementation
+        #GE = GE.col_join((Matrix([[Integer(0) for j in range(3*i)]+[Integer(1) for j in range(3)] + [Integer(0) for j in range(3*T.size()-3*(i+1))]])))
     edges = T.countEdges()
     cusps = T.countCusps()
     # 2pi for edge equations, 0 for cusp equations, pi for three dihedral angles of a tetrahedron (then divide out pi)
     v= vector([2 for i in range(edges)]+[0 for i in range(2*cusps)]+[1 for i in range(T.size())])
-    assert v.length() == GE.dimensions()[0]
-    angles_vec = GE.solve_right(v)  # solve the system of equations
-    angles = Matrix([[angles_vec[j+i] for i in range(3)] for j in range(0,angles_vec.length(),3)])
+
+    assert len(v) == len(GE.rows())
+    angles_vec = GE.solve_right(v)
+
+###### for sympy implementation    
+#    assert v.rows == GE.rows
+#    solutions, params = GE.gauss_jordan_solve(v)  # solve the system of equations, returns parametrization of solutions
+#    param_zeroes = { tau:0 for tau in params } #set parameters to 0 to get a solution which will hopefully be an integer solution.
+#    angles_vec = solutions.xreplace(param_zeroes) 
+    
+    angles = Matrix([[angles_vec[j+i] for i in range(3)] for j in range(0,len(angles_vec),3)])
     return angles
 
 

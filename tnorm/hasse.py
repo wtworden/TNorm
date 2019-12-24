@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+#from math import floor ## Warning: returns float
 
 import tnorm.constants
 QUIET = tnorm.constants.QUIET

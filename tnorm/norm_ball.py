@@ -20,6 +20,7 @@ class NormBall():
         self.num_faces = len(self.polyhedron.faces(self.polyhedron.dim()-1))
         self.face_list = self.polyhedron.faces(self.polyhedron.dim()-1)
         self._face_dict = {}
+        self.confirmed = False
 
     ### sage does not index lines, rays, and vertices independently. We would like our indices to agree with those 
     ### of the sage Polyhedron, with lines and vertices indexed separately, so instead of using sages indices 
@@ -159,13 +160,6 @@ class TNormBall(NormBall):
             projected_verts = [[vector(v).dot_product(b.normalized()) for b in basis] for v in P.vertices_list()]
             return Polyhedron(projected_verts)
 
-#        zeros = vector([0 for i in range(n)])
-#        M = Matrix(subspace.basis() + [zeros for i in range(n-k)])
-#        perp = M.solve_right(zeros)
-
-
-
-
 class DualNormBall(NormBall):
     def __init__(self, vertices, polyhedron):
         NormBall.__init__(self, vertices, polyhedron)
@@ -188,7 +182,7 @@ class AdornedVertex(Vertex):
         self.boundary_slopes = boundary_slopes
         self._is_ray = is_ray
         if self.has_surface_rep:
-            self.frac = (-1./self.euler_char) if self.euler_char != 0 else +Infinity
+            self.frac = (-1./self.euler_char) if self.euler_char != 0 else float('inf')
             self.genus = (2- self.euler_char - self.num_boundary_comps)/2
         else:
             self.frac = None
@@ -199,6 +193,9 @@ class AdornedVertex(Vertex):
         frac = '' if self.frac == 1 else self.frac
         vert_or_ray = 'Ray' if self._is_ray else 'Vertex' 
         return '{} {}: represented by {}*S_{},{} at {}, mapped from surface with index {}'.format(vert_or_ray, self.index, self.frac, self.genus, self.num_boundary_comps, self.coords, self.surface_index)
+
+    def __repr__(self):
+        return self.__str__()
 
     def detail(self):
         return self.__str__()
@@ -218,6 +215,13 @@ class Facet():
         self.dim = dim
         self.vertices = vertices
         self.rays = rays
+
+    
+    def __str__(self):
+        return 'facet of dimension {} with vertices:\n{}'.format(self.dim,self.vertices)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 

@@ -2,6 +2,7 @@
 import contextlib
 import tempfile
 import shutil
+from fractions import gcd as GCD
 
 class cached_property(object):
     """
@@ -31,3 +32,21 @@ def make_temp_directory():
         yield temp_dir
     finally:
         shutil.rmtree(temp_dir)
+
+
+def lcm(list_of_ints):
+    L = list_of_ints
+    LCM = 1
+    for k in L:
+        LCM = LCM*k//gcd(LCM,k)
+    return LCM
+
+#def gcd(a,b):
+#    return abs(GCD(a,b))
+
+
+
+
+
+
+
