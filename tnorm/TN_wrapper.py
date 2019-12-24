@@ -12,7 +12,7 @@ import itertools
 #import imp
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
-from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2
+from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2, qtons_image_in_C2
 from tnorm.kernel.boundary import bdy_slopes_unoriented_
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
@@ -99,6 +99,7 @@ class TN_wrapper():
 		self._over_face = {}
 		self._is_norm_minimizing = {}
 		self._is_admissible = {}
+		self._qtons_image_in_C2 = {}
 		if self.manifold.num_cusps() > 0:
 			self._map_to_H1bdy = {}
 			self._regina_bdy_slopes = {}
@@ -125,7 +126,7 @@ class TN_wrapper():
 			self._quad_map_to_C2 = get_quad_map_to_C2(self.triangulation, self._face_map_to_C2)
 			H2_basis_in_C2, P, qtons_image = H2_as_subspace_of_C2(self, self._face_map_to_C2, self._quad_map_to_C2)
 			self._project_to_im_del3 = P
-			self._qtons_image_in_C2 = qtons_image
+			self._qtons_image_in_C2 = {i:qtons_image[i] for i in range(len(qtons_image))}
 			assert len(H2_basis_in_C2) == self.betti
 			I = Matrix.identity(self.betti)
 			B = Matrix(H2_basis_in_C2).transpose()
@@ -274,6 +275,21 @@ class TN_wrapper():
 		else:
 			return self._simplicial_map_to_H2(qtons)
 
+	def simplicial_class(self,qtons):
+		if not self.uses_simplicial_homology:
+			return None
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if ind in self._qtons_image_in_C2:
+				c = self._qtons_image_in_C2[ind]
+			else:
+				c = qtons_image_in_C2(self,self._quad_map_to_C2)
+				self._qtons_image_in_C2[ind] = c
+			return c
 
 	def over_face(self, qtons, as_string=False):
 
@@ -537,9 +553,9 @@ class TN_wrapper():
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)
 			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
 			if not self.manifold_is_closed:
-				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True, self.simplicial_class(vertices[i][0])) for i in range(len(vertices))]
 			else:
-				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],0, self.euler_char(vertices[i][0]), [], False, self.is_admissible(vertices[i][0]), True) for i in range(len(vertices))]
+				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],0, self.euler_char(vertices[i][0]), [], False, self.is_admissible(vertices[i][0]), True, self.simplicial_class(vertices[i][0])) for i in range(len(vertices))]
 
 			Rays = []
 		ball = TNormBall(Vertices, Rays, polyhedron)

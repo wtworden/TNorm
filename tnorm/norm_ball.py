@@ -121,6 +121,8 @@ class TNormBall(NormBall):
                 rays = [self.ray(2*self.index_of_poly_vert(l, True)+j) for l in face.lines() for j in [0,1]]
                 self._face_dict[dim].append(Facet(i, dim, vertices, rays))
 
+    def simplicial_class_of_vertex(self,vertex_index):
+        return self.vertices[vertex_index].simplicial_class
 
 
     def facets(self, dim):
@@ -173,9 +175,10 @@ class Vertex():
 
 
 class AdornedVertex(Vertex):
-    def __init__(self, index, surface_index, coords, num_boundary_comps, euler, boundary_slopes, is_ray, is_admissible, has_rep):
+    def __init__(self, index, surface_index, coords, num_boundary_comps, euler, boundary_slopes, is_ray, is_admissible, has_rep, simplicial_class):
         Vertex.__init__(self, index, coords)
         self.surface_index = surface_index
+        self.simplicial_class = simplicial_class
         self.has_surface_rep = has_rep
         self.num_boundary_comps = num_boundary_comps 
         self.euler_char = euler

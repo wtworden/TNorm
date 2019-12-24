@@ -30,16 +30,13 @@ def standard_basis_tup(k, dim):
 
 def get_face_map_to_C2(T):
     tris = T.triangles()
-    s = T.size()
+    num_faces = len(tris)
     C2_face_map = {}
-    count = 0
-    for i in range(s):
-        for j in range(4):
-            if (i,j) not in C2_face_map:
-                C2_face_map[(i,j)] = standard_basis_vec(count,2*s)
-                tet = T.tetrahedron(i)
-                C2_face_map[(tet.adjacentTetrahedron(j).index(),tet.adjacentGluing(j)[j])] = -C2_face_map[(i,j)]
-                count += 1
+    for k in range(num_faces):
+        t = tris[k]
+        v = standard_basis_vec(k,num_faces)
+        C2_face_map[(t.front().tetrahedron().index(),t.front().triangle())] = -v
+        C2_face_map[(t.back().tetrahedron().index(),t.back().triangle())] = v
 
     return C2_face_map
 
