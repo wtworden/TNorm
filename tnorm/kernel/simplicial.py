@@ -3,21 +3,22 @@ from tnorm.kernel.regina_helpers import regina_to_sage_int
 
 """
 Let t be the number of tetrahedra for a triangulation T of M, and let v be the number of vertices (if M is cusped this is the
-number of cusps). Then T has 4t/2=2t faces and which generate the chain group C_2. A (possibly closed, not nec. embedded)
+number of cusps). Then T has 4t/2=2t faces and which generate the dim-2 chain group C_2. A (possibly closed, not nec. embedded)
 spun normal surface S is identified with an element of C_2, via an identification of quads with pairs of tetrahdera faces: an 
 oriented quad q in a tetahedron t is isotopic to the pair of triangles of t (with outward tranverse orientation) that meet
-at the edge that q misses, and which the transverse orientation of q points away from. By mapping all qtons to C2 via this 
-scheme, we get a subspace K, which is the kernel of the boundary map from C2-->C1. We also get the image L of the boundary map
-C3-->C2 by taking the span of the images del3(t) for tetrahedra t in T.
+at the edge that q misses, and which the transverse orientation of q points away from (see Segerman's "On spun normal and twisted
+square surfaces"). By mapping all qtons to C2 via this scheme, we get a subspace K, which is the kernel of the boundary map 
+from C2-->C1. We also get the image L of the boundary map C3-->C2 by taking the span of the images del3(t) for tetrahedra t in T.
 
 Let dim(C2)=n, let dim(K)=k, and let dim(L)=l. let b_1,...,b_k be vectors in C2 forming a basis for K, and let c_1,...,c_l be 
 vectors is C2 forming a basis for L. Let P be projection onto L. Then Q*b_i := b_i-P*b_i is in the orthogonal complement of L in K, as 
 a subspace of C2. Let O=span{(Q*b_i)}_i. dim(O)=d should be the betti number of T, i.e., the dimension of H2 rel bdy.
+Let {v_1,...,v_d} be a spanning set of vectors for O. Note that the v_i are not necesarily orthogonal, and there is no reason
+to make them orthogonal, as we will map them to the stardand basis below.
 
-Next find a map A:O-->QQ^d by solving A*B=Id_k where B=[o_1,...,o_k] is a matrix whose columns are vectors in C2 which 
-give a basis for O. If S_1,...S_d are normal surfaces realizing the homological longitudes, then the images A*Q*S_i should 
-be a basis for A(O)=QQ^d=H2. Now just map all normal surfaces down to H2 via A*Q, then apply the change of basis that gets
-us to the basis A*Q*S_i.
+Next find a map A:O-->QQ^d by solving A*B=Id_k where B=[v_1,...,v_d] is a matrix whose columns are the spanning vectors 
+{v_1,...,v_d}. Now just map all normal surfaces down to H2 via A*Q. Note that the v_i come from cycles, so the basis elements 
+for H2 are associated to normal surfaces.
 """
 
 
@@ -170,107 +171,6 @@ def projection(vectors):
     A = Matrix(vectors).transpose()
     P = A*((A.transpose()*A).inverse())*A.transpose()
     return P
-
-
-#def get_basis_surfaces(TN_Wrapper,im_del3):
-#    W = TN_Wrapper
-#    T = W.triangulation
-#    periph_basis_surfaces = get_periph_basis_surfaces(W)
-#    basis = {map_qtons_to_C2(i,C2_quad_map):i for i in periph_basis_surfaces.values()}
-#    num_cusps = W.manifold.num_cusps()
-#    betti = T.homologyH1().rank()
-#    #internal_H2_std_vecs = [tuple([0 if i != k else 1 for i in range(betti)]) for k in range(num_cusps,betti)]
-#    internal_rank = betti - num_cusps
-#    closed
-#    for i in range(W.qtons().size()):
-#        v = map_qtons_to_C2(i,C2_quad_map)
-
-
-
-
-## take indices found above, map the corresponding surface to C2
-#def get_basis_image_in_C2(TN_Wrapper, C2_quad_map):
-#    W = TN_Wrapper
-#    T = W.triangulation
-#    image = []
-#    basis_surfaces = get_periph_basis_surfaces(W)
-#    for i in basis_surfaces:
-#        image.append(map_qtons_to_C2(W.qtons().surface(i),C2_quad_map))
-#    return image
-
-
-
-
-
-#def qtons_in_H2(TN_Wrapper, C2_face_map, C2_quad_map):
-#    W = TN_Wrapper
-#    T=W.triangulation
-#    H2_basis_in_C2, P, qtons_image = H2_as_subspace_of_C2(W, C2_quad_map)
-#    betti = len(H2_in_C2)
-#    assert betti == W.betti
-#    I = Matrix.identity(betti)
-#    B = Matrix(H2_in_C2).transpose()
-#    A = B.solve_left(I)
-#
-#    #periph_basis = get_basis_image_in_C2(W, C2_quad_map)
-#    #qtons_image = qtons_image_in_C2(W, C2_quad_map)
-#    #H2_basis = [A*(v-P*v) for v in periph_basis]
-#    #print(H2_basis)
-#    #C = Matrix(H2_basis).transpose().inverse()
-#    #print([C*v for v in H2_basis])
-#    points = [(A*(qtons_image[i]-P*qtons_image[i]))/abs(W.euler_char(i)) for i in range(len(qtons_image))]
-#    return points
-
-#def map_to_H2(TN_Wrapper,C2_face_map,C2_quad_map):
-#    W = TN_Wrapper
-#    M = Matrix(get_basis_image_in_C2(W,C2_face_map,C2_quad_map)).transpose()
-#    betti = W.triangulation.homologyH1().rank()
-#    A = []
-#    for i in range(betti):
-#        v=standard_basis_vec(i,betti)
-#        a = M.solve_left(v)
-#        A.append(a)
-#    A = Matrix(A)
-#    Proj = M*((M.transpose()*M)**(-1))*M.transpose()
-#    return A*Proj
-
-
-#def proj_to_basis(W, surface, C2_quad_map, basis_image):
-#    betti = W.triangulation.homologyH1().rank()
-#    image_in_C2 = map_qtons_to_C2(surface, C2_quad_map)
-#    image_in_H2 = [0 for _ in range(betti)]
-#    for i in range(len(basis_image)):
-#        image_in_H2[i] = (image_in_C2.dot_product(basis_image[i]))/(basis_image[i].dot_product(basis_image[i]))
-#    return Vector(image_in_H2)
-
-#def map_qtons_to_H2(TN_Wrapper, surface_ind):
-#    W = TN_Wrapper
-#    T = W.triangulation
-#    C2_face_map = get_face_map_to_C2(T)
-#    C2_quad_map = get_quad_map_to_C2(T,C2_face_map)
-#    B = map_to_H2(W, C2_face_map, C2_quad_map)
-#    image_in_C2 = map_qtons_to_C2(W.qtons().surface(surface_ind),C2_quad_map)
-#    return B*image_in_C2
-#
-#def points_in_H2(TN_Wrapper):
-#    W = TN_Wrapper
-#    T = W.triangulation
-#    C2_face_map = get_face_map_to_C2(T)
-#    C2_quad_map = get_quad_map_to_C2(T,C2_face_map)
-#    proj_to_H2 = map_to_H2(W, C2_face_map, C2_quad_map)
-#    points = []
-#    for i in range(W.qtons().size()):
-#        points.append((proj_to_H2*map_qtons_to_C2(W.qtons().surface(i),C2_quad_map))/abs(W.euler_char(i)))
-#    return points
-
-#def polyhedron_from_simplicial_H2(TN_Wrapper):
-#    W = TN_Wrapper
-#    points = points_in_H2(W)
-#    return Polyhedron(vertices=points)
-
-
-
-
 
 
 
