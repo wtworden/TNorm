@@ -1,0 +1,29 @@
+<------------+                                  
+             |                                  
+             |                                                                      
+             |                            Welcome to tnorm!                         
+             |                                                                      
+             |         To get started, enter the name of a manifold in the          
+             +---------Manifold field, and click Load. Any string accepted          
+                       by SnapPy is accepted here, e.g., '4_1', 'DT:[(6,8,2,4)]',   
+                       'L5a1', though for computations to be correct the manifold   
+                       must be a link in a homology 3-sphere. To open a file        
+                       containing a triangulation (with extention .tri), type       
+                       'file' and click Load.                                       
+                                                                                                       
+                       After loading a manifold, click the 'norm ball' or           
+                       'dual norm ball' tabs to view more detailed information      
+                       about each, or click on the 'qton surfaces' tab to view 
+                       information about all quad transversely oriented normal
+                       surfaces (not just vertices of the norm ball).
+
+                       In the case where the Thurston norm is a semi-norm (and 
+                       not a norm), e.g., when the manifold is not hyperbolic,
+                       things are more complicated. In this case, the norm ball
+                       is a non-compact polyhedron, so we can only graph its
+                       projection to the subspace in which it is a norm. We also
+                       give the option in this case of viewing the convex hull of
+                       the image in H2 of normal surfaces having negative Euler
+                       characteristic (this is a finite polyhedron).
+
+

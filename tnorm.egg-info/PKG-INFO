@@ -1,6 +1,6 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: tnorm
-Version: 0.1.5
+Version: 0.1.8
 Summary: UNKNOWN
 Home-page: https://github.com/wtworden/TNorm
 Author: William Worden
@@ -8,7 +8,7 @@ Author-email: wtworden@gmail.com
 License: UNKNOWN
 Description: # TNorm
         
-        TNorm is a package for computing the Thurston norm unit ball of hyperbolic links in homology 3-spheres. Currently, tnorm must be installed in Sage, and Sage must have Regina and SnapPy installed. To instal TNorm:
+        TNorm is a package for computing the Thurston norm unit ball of hyperbolic 3-manifolds. Currently, tnorm must be installed in Sage, and Sage must have Regina and SnapPy installed. To instal TNorm:
         
         $ sage -pip install tnorm
         
@@ -18,8 +18,17 @@ Description: # TNorm
         
         In a future release, we plan to remove the dependence on Sage.
         
-        Currently, if M is a fibered knot complement, tnorm might not return the correct norm ball. We plan to fix this issue in a future release. Additionally, if M is not hyperbolic, the Thurston norm is only a semi-norm, and the unit norm ball is an infinite polyhedron. In this case, tnorm will do its best, but may not return the correct norm ball.
+        Support for hyperbolic 3-manifolds that are not multi-component links in rational homology 3-spheres has been added very recently, and has not been thoroughly tested yet. If you get any results that don't make sense, please email me at william.worden@rice.edu.
+        
+        TO DO:
+        
+        * add feature: determine fiberedness of a hyp 3-mfld (and hence knot genus of a knot)
+        * remove Sage dependence.
+        * better documentation throughout.
+        * some optimization for speed is probably still possible.
+        
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
