@@ -49,7 +49,7 @@ class TN_wrapper():
 	sage: W = TN_wrapper(string)       # where string is the triangulation encoded as a string (i.e., contents of a tri file)
 	
 	"""
-	def __init__(self, manifold, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, peripheral_H1_basis='natural', force_simplicial_homology=False):
+	def __init__(self, manifold, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, bdy_H1_basis='natural', force_simplicial_homology=False):
 		
 		if isinstance(manifold,str):
 			self.manifold = snappy.Manifold(manifold).filled_triangulation()
@@ -69,11 +69,11 @@ class TN_wrapper():
 				self.knows_link_complement = True
 			except ValueError:
 				self.knows_link_complement = False
-			if self.knows_link_complement and peripheral_H1_basis == 'natural':
-				self.peripheral_H1_basis = 'natural'
+			if self.knows_link_complement and bdy_H1_basis == 'natural':
+				self.bdy_H1_basis = 'natural'
 			else:
 				self.manifold.set_peripheral_curves('shortest')
-				self.peripheral_H1_basis = 'shortest'
+				self.bdy_H1_basis = 'shortest'
 
 			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
 			self._angle_structure = solve_lin_gluingEq(self.triangulation)
@@ -82,8 +82,7 @@ class TN_wrapper():
 		else:
 			self.triangulation = regina.Triangulation3(self.manifold._to_string())
 			self.manifold_is_closed = True
-			self.basis = 
-
+			self.bdy_H1_basis = None
 
 		self._qtons = qtons
 		self._tkr = False
@@ -225,7 +224,7 @@ class TN_wrapper():
 
 	def boundary_slopes(self,qtons,quad_mat=None):
 		"""
-		Return the boundary slope of the given surface in H1(\partial M), with respect to the basis W.peripheral_H1_basis. 
+		Return the boundary slope of the given surface in H1(\partial M), with respect to the basis W.bdy_H1_basis. 
 		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
 
 		Note that this slope may not be the same as W.regina_boundary_slopes(surface), as Regina computes slopes based on

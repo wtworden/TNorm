@@ -134,16 +134,16 @@ class TNormApp:
         self.BasisOption = tk.Frame(self.LoadOptionsFrame, bg=BG_COLOR)
         self.BasisOption.pack(side=TOP)
 
-        self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='H1 basis:')
+        self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='H1(bdy) basis:')
         self.BasisLabel.grid(row=0,column=0,sticky='nw')
 
-        self.basis_var = StringVar(None,'natural')
-        self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='natural', variable=self.basis_var, value='natural')
+        self.bdy_H1_basis_var = StringVar(None,'natural')
+        self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='natural', variable=self.bdy_H1_basis_var, value='natural')
         self.NaturalRadio.grid(row=1, column=1, sticky='w')
 
-        self.ShortestRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='shortest', variable=self.basis_var, value='shortest')
+        self.ShortestRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='shortest', variable=self.bdy_H1_basis_var, value='shortest')
         self.ShortestRadio.grid(row=0, column=1, sticky='w')
-        self.basis_var.set('natural')
+        self.bdy_H1_basis_var.set('natural')
 
         # control frame: load frame: load button -----------------------------
 
@@ -434,7 +434,7 @@ class TNormApp:
         self.disable_all_buttons()
         self.disable_all_tabs()
         self.clear_all_tabs()
-        self.wrapper = TN_wrapper(M, allows_non_admissible=bool(self.allow_na_var.get()), basis=self.basis_var.get())
+        self.wrapper = TN_wrapper(M, allows_non_admissible=bool(self.allow_na_var.get()), bdy_H1_basis=self.bdy_H1_basis_var.get())
         self.ball = self.wrapper.norm_ball
         self.dual_ball = self.wrapper.dual_norm_ball
         generate_summary(self)
