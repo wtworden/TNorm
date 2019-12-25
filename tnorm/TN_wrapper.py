@@ -114,8 +114,10 @@ class TN_wrapper():
 		if not QUIET:
 			print('Done.')
 
-		if self.manifold.homology().betti_number() > self.manifold.num_cusps()
+		if self.manifold.homology().betti_number() > self.manifold.num_cusps():
 			self.has_internal_homology = True
+		else:
+			self.has_internal_homology = False
 
 		# if the manifold has internal homology or force_simplicial_homology==True then we need to use simplicial homology.
 		if self.has_internal_homology or force_simplicial_homology:

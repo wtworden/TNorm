@@ -7,6 +7,7 @@ except ValueError:
     pass
 
 from tnorm.version import __version__
+version = __version__
 
 import tnorm.kernel
 import tnorm.GUI
