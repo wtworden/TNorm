@@ -11,8 +11,8 @@ from math import ceil
 def make_qtons_table(tnorm_app):
 #    try:
     qd = tnorm_app.wrapper.qtons_info
-    treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], str(qd[i]['boundary_slopes']), qd[i]['num_boundary_comps'], qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_face'], str(qd[i]['spinning_slopes'])) for i in qd]
-    column_names = ('qtons index', 'image in H2', 'euler char', 'boundary slopes', 'num bdy comps', 'genus','norm minimizing?','over face','spinning_slopes')
+    treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], qd[i]['num_boundary_comps'], str(qd[i]['boundary_slopes']), str(qd[i]['spinning_slopes']), qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_facet']) for i in qd]
+    column_names = ('qtons index', 'image in H2', 'euler char', 'num bdy comps', 'boundary slopes', 'spinning_slopes', 'genus','norm minimizing?','over facet')
     make_treeview_table(tnorm_app.QtonsTab,treedata,column_names, True)
 #    except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
@@ -32,8 +32,8 @@ def make_vertices_table(tnorm_app, frame, vert_list, with_scrollbar=True):
     height = len(vert_list)
     width = 9
     verts = {i:B.vertices[i] for i in vert_list}
-    column_names = ('vertex','qtons index','coords','euler char', 'boundary slopes', 'qtons surface', 'spinning slopes')
-    treedata = [(i,verts[i].surface_index,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps), str(W.regina_bdy_slopes(verts[i].surface_index))) for i in vert_list]
+    column_names = ('vertex', 'qtons surface','qtons index','coords','euler char', 'boundary slopes', 'spinning slopes')
+    treedata = [(i, 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps), verts[i].surface_index,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), str(W.regina_bdy_slopes(verts[i].surface_index))) for i in vert_list]
     make_treeview_table(frame, treedata, column_names, with_scrollbar)
 
 def make_facets_table(tnorm_app, frame, dim):
@@ -44,7 +44,7 @@ def make_facets_table(tnorm_app, frame, dim):
         B = tnorm_app.ball
         facets = B.facets(dim)
         width = 7
-        column_names = ('face','vertex','coords','euler char', 'boundary slopes', 'qtons surface')
+        column_names = ('facet','vertex','coords','euler char', 'boundary slopes', 'qtons surface')
         treedata = []
         for j in range(len(facets)):
             f = facets[j]
