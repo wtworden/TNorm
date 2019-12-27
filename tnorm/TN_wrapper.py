@@ -1,10 +1,14 @@
 #-*-python-*-
 from __future__ import print_function
 
+import sys
+try:
+    sys.path.remove('/Applications/Regina.app/Contents/MacOS/python')
+except ValueError:
+    pass
 import regina
 
 import snappy
-import sys
 import time
 import itertools
 
@@ -22,13 +26,11 @@ from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
 from tnorm.x3d_to_html import *
-
 import tnorm.constants
 
 #from sympy import Matrix
 #from sympy import Rational as QQ
 
-QUIET = tnorm.constants.QUIET
 
 #preparser(False)
 
@@ -52,15 +54,19 @@ class TN_wrapper():
 	def __init__(self, manifold, qtons=None, tracker=False, quiet=False, allows_non_admissible=False, bdy_H1_basis='natural', force_simplicial_homology=False):
 		
 		if isinstance(manifold,str):
-			self.manifold = snappy.Manifold(manifold).filled_triangulation()
+			self.manifold = snappy.Manifold(manifold)
 		elif isinstance(manifold, regina.engine.SnapPeaTriangulation):
 			self.manifold = snappy.Manifold(manifold.snapPea())
 		elif isinstance(manifold, regina.engine.Triangulation3):
 			self.manifold = snappy.Manifold(manifold.snapPea())
 		elif isinstance(manifold, snappy.Manifold):
-			self.manifold = manifold.filled_triangulation()
+			self.manifold = manifold
 		elif isinstance(manifold, snappy.Triangulation):
 			self.manifold = manifold
+
+		for c in self.manifold.cusp_info():
+			if c.is_complete == False:
+				self.manifold = self.manifold.filled_triangulation()
 
 		self.num_cusps = self.manifold.num_cusps()
 		if self.num_cusps != 0:
@@ -89,7 +95,7 @@ class TN_wrapper():
 		self.allows_non_admissible = allows_non_admissible
 		self.is_fibered = 'unknown'
 		self.betti_number = self.triangulation.homologyH1().rank()
-		QUIET = quiet
+		self._QUIET = quiet
 
 		# qtons memoization caches-----
 		self._euler_char = {}
@@ -105,7 +111,7 @@ class TN_wrapper():
 			self._map_to_H1bdy = {}
 			self._regina_bdy_slopes = {}
 
-		if not QUIET:		
+		if not self._QUIET:		
 			print('Enumerating quad transversely oriented normal surfaces (qtons)... ', end='')
 			sys.stdout.flush()
 
@@ -119,7 +125,7 @@ class TN_wrapper():
 		for i in range(self._qtons.size()):
 			self._qtons.surface(i).setName(str(i))
 
-		if not QUIET:
+		if not self._QUIET:
 			print('Done.')
 
 		if self.betti_number > self.num_cusps:
@@ -132,8 +138,8 @@ class TN_wrapper():
 			
 			self.uses_simplicial_homology = True
 
-			if not QUIET:
-				print('computing simplicial homology...')
+			if not self._QUIET:
+				print('computing simplicial homology...',end='')
 				sys.stdout.flush()
 
 			self._face_map_to_C2 = get_face_map_to_C2(self.triangulation)
@@ -147,7 +153,7 @@ class TN_wrapper():
 			A = B.solve_left(I)
 			self._map_H2_to_standard_basis = A
 
-			if not QUIET:
+			if not self._QUIET:
 				print('Done.')
 				sys.stdout.flush()
 
@@ -338,7 +344,8 @@ class TN_wrapper():
 			return f
 
 	def is_norm_minimizing(self, qtons):
-
+		"""Return True if the given qtons surface is Thurston norm minimizing.
+		"""
 		try:
 			ind = int(qtons)
 		except TypeError:
@@ -355,8 +362,8 @@ class TN_wrapper():
 				self._is_norm_minimizing[ind] = False
 				return False
 
-	def locally_compatible(self,qtons1,qtons2):
-		pass
+#	def locally_compatible(self,qtons1,qtons2):
+#		pass
 
 	def is_admissible(self, qtons):
 		try:
@@ -535,7 +542,7 @@ class TN_wrapper():
 		The Polyhedron class has a lot of methods, and I have not explored many of them. There is 
 		probably a lot more that would be useful. Use tab completion to explore!
 		"""
-		if not QUIET:
+		if not self._QUIET:
 			print('Computing Thurston norm unit ball... ', end='')
 			sys.stdout.flush()
 
@@ -590,7 +597,6 @@ class TN_wrapper():
 		if self.num_cusps == 1 and self.betti_number == 1:
 			A = self.manifold.alexander_polynomial()
 			A_norm = QQ(A.degree() - 1)
-			print(A_norm)
 			try:
 				v=ball.vertices[0]
 			except IndexError:
@@ -602,7 +608,7 @@ class TN_wrapper():
 			elif len(ball.vertices)==0 or A_norm > abs(v.euler_char):
 				self.is_fibered = True
 				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-				Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False)]
+				Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False,None),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False, None)]
 				ball = TNormBall(Vertices, Rays, polyhedron)
 				ball.confirmed = True
 			elif A_norm == abs(v.euler_char):
@@ -610,38 +616,35 @@ class TN_wrapper():
 				ball.confirmed = True
 			elif A_norm < abs(v.euler_char):
 				M = self.manifold.copy()
+				N=snappy.Manifold('K6_22')
 				p,q = v.boundary_slopes[0]
 				d = gcd(p,q)
 				M.dehn_fill((p/d,q/d))
 				Mf = M.filled_triangulation()
 				T = regina.Triangulation3(Mf._to_string())
+				boo = T.intelligentSimplify()
 				ns = regina.NormalSurfaces.enumerate(T,regina.NS_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
-				print(ns.size())
 				non_trivial = [i for i in range(ns.size()) if ns.surface(i).isOrientable()]
-				print(len(non_trivial))
 				if len(non_trivial)>1:
 					non_trivial = [i for i in non_trivial if ns.surface(i).cutAlong().isConnected()]
-					print(len(non_trivial))
 				if len(non_trivial) == 0: ## something is wrong!
 					print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
 					ball.confirmed = False
 				elif len(non_trivial) >= 1:
 					genus = min([(2-regina_to_sage_int(ns.surface(i).eulerChar()))/2 for i in non_trivial])
-					print(2*genus - 2 + 1)
 					if 2*genus - 2 + 1 == abs(v.euler_char):
 						self.is_fibered = False
 						ball.confirmed = True
 					elif 2*genus - 2 + 1 == A_norm:
 						self.is_fibered == True
 						polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-						Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False)]
+						Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False, None),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False,None)]
 						ball = TNormBall(Vertices, Rays, polyhedron)
 						ball.confirmed = True
 					else:
-						print('hello')
 						print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
 						ball.confirmed = False
-		if not QUIET:
+		if not self._QUIET:
 			print('Done.')
 		return ball
 
@@ -663,7 +666,7 @@ class TN_wrapper():
 
 	@cached_property
 	def qtons_info(self):
-		if not QUIET:
+		if not self._QUIET:
 			print('Analyzing quad transversely oriented normal surfaces... ', end='')
 		qtons_info_dict = dict([(i,{}) for i in range(self.qtons().size())])
 		for i in range(self.qtons().size()):
@@ -675,7 +678,7 @@ class TN_wrapper():
 			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)
 			qtons_info_dict[i]['over_facet'] = self.over_facet(i,as_string=True)
 			qtons_info_dict[i]['spinning_slopes'] = self.regina_bdy_slopes(i)
-		if not QUIET:
+		if not self._QUIET:
 			print('Done.')
 		return qtons_info_dict
 
