@@ -4,7 +4,6 @@
 
 #import imp
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
-import regina
 
 from tnorm.sage_types import *
 

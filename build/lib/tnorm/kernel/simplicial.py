@@ -98,7 +98,7 @@ def get_periph_basis_surfaces(TN_Wrapper):
     else:
         T = W.triangulation
         num_cusps = W.manifold.num_cusps()
-        betti = T.homologyH1().rank()
+        betti = W.betti_number
         periph_H2_std_vecs = [standard_basis_tup(k,num_cusps) for k in range(num_cusps)]
         for i in range(W.qtons().size()):
             boundary_slopes = W.boundary_slopes(i)
