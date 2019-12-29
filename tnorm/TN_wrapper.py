@@ -492,37 +492,51 @@ class TN_wrapper():
 		these points is the norm ball.
 		"""
 		points0 = dict()
+		points = dict()
 		rays = dict()  # if the Euler char of s is 0 we can't normalize. This means the norm ball is
 		               # infinite in the direction of map_to_H2(s), so it contains the ray (0,map_to_H2(s)).
 		image_w_euler = self._image_in_H2M()
+
 
 		for (i,pt,ec) in image_w_euler:
 			if ec < 0:
 				normalized = tuple([coord/(-ec) for coord in pt]) # divide by euler char to normalize
 
-				if not self.uses_simplicial_homology:
-					if normalized not in points0:
-						points0[normalized] = (i,0) 
-					elif points0[normalized][1] == 2:
-						continue
-						
-					bs = self.boundary_slopes(i)
-					rbs = self.regina_bdy_slopes(i)
-					d = gcd([gcd(s) for s in bs])				
-	
-					if d==1 and bs==rbs:
-						points0[normalized] = (i,2) 
-					elif d==1:
-						points0[normalized] = (i,1) 
+#				if not self.uses_simplicial_homology:
+				if normalized not in points0:
+					points0[normalized] = []
+					points0[normalized].append((i,pt,ec))
 				else:
-					if normalized not in points0:
-						points0[normalized] = (i,0)
-					else:
-						continue
+					points0[normalized].append((i,pt,ec))
 
 			elif ec == 0:
 				rays[tuple(pt)] = i
-		points = dict([(key,points0[key][0]) for key in points0])
+
+		for nzd in points0:
+			reps = sorted(points0[nzd],key=lambda x: -x[2])
+			points[nzd] = reps[0][0]
+#			tn = min([-reps[j][2] for j in range(len(reps))])
+#			for rep in reps:
+#				if rep[2] != tn:
+#					reps.remove(rep)
+#					break
+#
+#			
+#				bs = self.boundary_slopes(rep[0])
+#				rbs = self.regina_bdy_slopes(rep[0])
+#				if bs==rbs:
+#					points[nzd] = rep[0]
+#		for nzd in points0:
+#			if nzd not in points:
+#				points[nzd] = points0[nzd][0][0]
+#				else:
+#					if normalized not in points0:
+#						points0[normalized] = (i,0)
+#					else:
+#						continue
+
+
+#		points = dict([(key,points0[key][0]) for key in points0])
 		return points, rays
 
 	@cached_property
@@ -595,10 +609,21 @@ class TN_wrapper():
 			Rays = []
 		ball = TNormBall(Vertices, Rays, polyhedron)
 		if self.num_cusps == 1 and self.betti_number == 1:
+			M = self.manifold.copy()
+			(p,q) = self.manifold.homological_longitude()
+			elem_divs = [div for div in M.homology().elementary_divisors() if div != 0]
+			M.dehn_fill((p,q))
+			filled_elem_divs = [div for div in M.homology().elementary_divisors() if div != 0]
+			b = 1
+			for div in elem_divs:
+				b *= div
+			for div in filled_elem_divs:
+				b /= div
 			A = self.manifold.alexander_polynomial()
 			A_norm = QQ(A.degree() - 1)
 			try:
 				v=ball.vertices[0]
+
 			except IndexError:
 				pass
 			if A_norm <= 0 or not A.is_monic():
@@ -606,20 +631,21 @@ class TN_wrapper():
 				ball.confirmed = True
 
 			elif len(ball.vertices)==0 or A_norm > abs(v.euler_char):
+				print(self.manifold.name())
+				if len(ball.vertices)!=0:
+					assert A_norm <= abs(v.euler_char)
 				self.is_fibered = True
 				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-				Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False,None),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False, None)]
+				Vertices = [AdornedVertex(0, None, (-1/A_norm,), b, -A_norm, [(0,1)], False, True, False,None),AdornedVertex(1, None, (1/A_norm,), b, -A_norm, [(0,-1)], False, True, False, None)]
 				ball = TNormBall(Vertices, Rays, polyhedron)
 				ball.confirmed = True
 			elif A_norm == abs(v.euler_char):
+				assert v.num_boundary_comps == b
 				self.is_fibered = 'unknown'
 				ball.confirmed = True
 			elif A_norm < abs(v.euler_char):
 				M = self.manifold.copy()
-				N=snappy.Manifold('K6_22')
-				p,q = v.boundary_slopes[0]
-				d = gcd(p,q)
-				M.dehn_fill((p/d,q/d))
+				M.dehn_fill(M.homological_longitude())
 				Mf = M.filled_triangulation()
 				T = regina.Triangulation3(Mf._to_string())
 				boo = T.intelligentSimplify()
@@ -628,21 +654,26 @@ class TN_wrapper():
 				if len(non_trivial)>1:
 					non_trivial = [i for i in non_trivial if ns.surface(i).cutAlong().isConnected()]
 				if len(non_trivial) == 0: ## something is wrong!
-					print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
+					print('Warning: failed to confirm that norm ball is correct (error: len(non_trivial)==0, culprit:M={}.'.format(self.manifold.name()))
 					ball.confirmed = False
 				elif len(non_trivial) >= 1:
 					genus = min([(2-regina_to_sage_int(ns.surface(i).eulerChar()))/2 for i in non_trivial])
-					if 2*genus - 2 + 1 == abs(v.euler_char):
+					if 2*genus - 2 + b == abs(v.euler_char):
 						self.is_fibered = False
 						ball.confirmed = True
-					elif 2*genus - 2 + 1 == A_norm:
+					elif 2*genus - 2 + b == A_norm:
+						multiplier = 1/QQ(abs(v.euler_char)/A_norm)
+						if self.uses_simplicial_homology == True:
+							simplicial_class = multiplier*self.simplicial_class(v.surface_index)
+						else:
+							simplicial_class = None
 						self.is_fibered == True
 						polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-						Vertices = [AdornedVertex(0, None, (-1/A_norm,), 1, -A_norm, [(0,1)], False, True, False, None),AdornedVertex(1, None, (1/A_norm,), 1, -A_norm, [(0,-1)], False, True, False,None)]
+						Vertices = [AdornedVertex(0, None, (-1/A_norm,), b, -A_norm, [(0,1)], False, True, False, simplicial_class),AdornedVertex(1, None, (1/A_norm,), b, -A_norm, [(0,-1)], False, True, False, simplicial_class)]
 						ball = TNormBall(Vertices, Rays, polyhedron)
 						ball.confirmed = True
 					else:
-						print('Warning: failed to confirm that norm ball is correct (this can happen for knots).')
+						print('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold.name()))
 						ball.confirmed = False
 		if not self._QUIET:
 			print('Done.')

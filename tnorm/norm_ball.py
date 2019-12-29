@@ -184,18 +184,15 @@ class AdornedVertex(Vertex):
         self.euler_char = euler
         self.boundary_slopes = boundary_slopes
         self._is_ray = is_ray
-        if self.has_surface_rep:
-            self.frac = (-1./self.euler_char) if self.euler_char != 0 else float('inf')
-            self.genus = (2- self.euler_char - self.num_boundary_comps)/2
-        else:
-            self.frac = None
-            self.genus = None
+        self.frac = QQ(-1/self.euler_char) if self.euler_char != 0 else float('inf')
+        self.genus = (2- self.euler_char - self.num_boundary_comps)/2
+
         self.is_admissible = is_admissible
     
     def __str__(self):
         frac = '' if self.frac == 1 else self.frac
         vert_or_ray = 'Ray' if self._is_ray else 'Vertex' 
-        return '{} {}: represented by {}*S_{},{} at {}, mapped from surface with index {}'.format(vert_or_ray, self.index, self.frac, self.genus, self.num_boundary_comps, self.coords, self.surface_index)
+        return '{} {}: represented by ({})*S_{},{} at {}, mapped from surface with index {}'.format(vert_or_ray, self.index, self.frac, self.genus, self.num_boundary_comps, self.coords, self.surface_index)
 
     def __repr__(self):
         return self.__str__()
