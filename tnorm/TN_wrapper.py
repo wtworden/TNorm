@@ -67,6 +67,7 @@ class TN_wrapper():
 		for c in self.manifold.cusp_info():
 			if c.is_complete == False:
 				self.manifold = self.manifold.filled_triangulation()
+				break
 
 		self.num_cusps = self.manifold.num_cusps()
 		if self.num_cusps != 0:
@@ -82,11 +83,13 @@ class TN_wrapper():
 				self.bdy_H1_basis = 'shortest'
 
 			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
+			self.triangulation.orient()
 			self._angle_structure = solve_lin_gluingEq(self.triangulation)
 			self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
 			self.manifold_is_closed = False
 		else:
 			self.triangulation = regina.Triangulation3(self.manifold._to_string())
+			self.triangulation.orient()
 			self.manifold_is_closed = True
 			self.bdy_H1_basis = None
 
@@ -630,10 +633,7 @@ class TN_wrapper():
 				self.is_fibered = False
 				ball.confirmed = True
 
-			elif len(ball.vertices)==0 or A_norm > abs(v.euler_char):
-				print(self.manifold.name())
-				if len(ball.vertices)!=0:
-					assert A_norm <= abs(v.euler_char)
+			elif len(ball.vertices)==0:
 				self.is_fibered = True
 				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
 				Vertices = [AdornedVertex(0, None, (-1/A_norm,), b, -A_norm, [(0,1)], False, True, False,None),AdornedVertex(1, None, (1/A_norm,), b, -A_norm, [(0,-1)], False, True, False, None)]
@@ -675,6 +675,9 @@ class TN_wrapper():
 					else:
 						print('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold.name()))
 						ball.confirmed = False
+			else:
+				# if we are here, then something is wrong, and the following will cause an error to be thrown.
+				assert A_norm <= abs(v.euler_char) # (this should never happen)
 		if not self._QUIET:
 			print('Done.')
 		return ball

@@ -35,10 +35,22 @@ def get_face_map_to_C2(T):
     for k in range(num_faces):
         t = tris[k]
         v = standard_basis_vec(k,num_faces)
-        C2_face_map[(t.front().tetrahedron().index(),t.front().triangle())] = -v
-        C2_face_map[(t.back().tetrahedron().index(),t.back().triangle())] = v
+        C2_face_map[(t.front().tetrahedron().index(),t.front().triangle())] = -v*(2*(t.front().triangle()%2)-1)
+        C2_face_map[(t.back().tetrahedron().index(),t.back().triangle())] = v*(2*(t.front().triangle()%2)-1)
 
     return C2_face_map
+
+def del3_matrix(T):
+    rows = []
+    C2_face_map = get_face_map_to_C2(T)
+    for i in range(T.size()):
+        row = vector([0 for _ in range(2*T.size())])
+        for j in range(4):
+            row += vector(C2_face_map[(i,j)])
+        rows.append(row)
+    mat = Matrix(rows).transpose()
+    return mat
+
 
 def get_quad_map_to_C2(T,C2_face_map):
     C2_quad_map = {}
@@ -170,7 +182,18 @@ def projection(vectors):
     return P
 
 
+def del2_matrix(triangulation):
+    bdy = []
+    for tri in triangulation.triangles():
+        row = [0] * triangulation.countEdges() # == countFaces(1)
 
+        for i in range(3):
+            edge_index = tri.edge(i).index()
+            perm = tri.edgeMapping(i) # == tri.faceMapping(1,i)
+            row[edge_index] += perm.sign()
+        bdy.append(row)
+    bdy = Matrix(bdy).transpose()
+    return bdy
 
 
 
