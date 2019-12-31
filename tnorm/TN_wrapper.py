@@ -83,16 +83,15 @@ class TN_wrapper():
 				self.bdy_H1_basis = 'shortest'
 
 			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
-			self.triangulation.orient()
 			self._angle_structure = solve_lin_gluingEq(self.triangulation)
 			self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
 			self.manifold_is_closed = False
 		else:
 			self.triangulation = regina.Triangulation3(self.manifold._to_string())
-			self.triangulation.orient()
 			self.manifold_is_closed = True
 			self.bdy_H1_basis = None
-
+		if not self.triangulation.isOriented():
+			self.triangulation.orient()
 		self._qtons = qtons
 		self._tkr = False
 		self.allows_non_admissible = allows_non_admissible
