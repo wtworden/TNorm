@@ -1,5 +1,6 @@
 
 from tnorm.version import version, __version__
+import sys
 
 
 #import tnorm.kernel

@@ -1,16 +1,16 @@
 from __future__ import print_function
 
 import tnorm.constants
-QUIET = tnorm.constants.QUIET
 import tkinter as tk
 
 from tkinter import ttk
 
+import sys
+
 
 def generate_summary(tnorm_app):
     try:
-        if not QUIET:
-            print('Generating summary page... ', end='')
+        print('Generating summary page... ', end='')
         W=tnorm_app.wrapper
         B=tnorm_app.ball
         P=tnorm_app.ball.polyhedron
@@ -24,8 +24,7 @@ def generate_summary(tnorm_app):
         qtons_inds = [v.surface_index for v in B.vertices]
         values = [(M.homology().rank(), M.volume(), M.num_tetrahedra(), M.num_cusps(), sym_group), (W.bdy_H1_basis, len(P.vertices()), [sum(P.vertex_adjacency_matrix()[i]) for i in range(P.n_vertices())], [(v.genus,v.num_boundary_comps) for v in B.vertices], len(P.faces(P.dim()-1)), ['<{}>'.format(' '.join([str(v.index()) for v in face.vertices()])) for face in P.faces(P.dim()-1)]), (W.allows_non_admissible, W.qtons().size(), len([1 for i in range(W.qtons().size()) if W.over_facet(i)!=None]), len([1 for i in range(W.qtons().size()) if W.is_norm_minimizing(i)]))]
         summary_page(tnorm_app.SummaryTab, sections, names, values)
-        if not QUIET:
-            print('Done.')
+        print('Done.')
     except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
 

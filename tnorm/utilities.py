@@ -41,8 +41,8 @@ def lcm(list_of_ints):
         LCM = LCM*k//gcd(LCM,k)
     return LCM
 
-#def gcd(a,b):
-#    return abs(GCD(a,b))
+def gcd(a,b):
+    return abs(GCD(a,b))
 
 
 

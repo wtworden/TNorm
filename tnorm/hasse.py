@@ -1,14 +1,10 @@
 from __future__ import print_function
 #from math import floor ## Warning: returns float
 
-import tnorm.constants
-QUIET = tnorm.constants.QUIET
-
+import sys
 from tnorm.sage_types import *
 
 def get_hasse(P):
-    if not QUIET:
-        print('Generating Hasse diagram... ', end='')
     G = Graphics()
     FL = P.face_lattice()
     HD = FL.hasse_diagram()
@@ -35,8 +31,6 @@ def get_hasse(P):
     G+=p
     G.SHOW_OPTIONS['figsize'] = ((P.dim()+3)*(w/6.),(P.dim()+3)*(w/9.))
     G.axes(False)
-    if not QUIET:
-        print('Done.')
     return G
 
 
