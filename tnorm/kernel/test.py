@@ -82,16 +82,22 @@ def test():
         assert B.polyhedron.is_compact(), W.manifold.name()+', force_simplicial=False'
     
         if W.manifold.num_cusps()>1:
-            W = tnorm.load(name, quiet=True, force_simplicial_homology=True)
-            B = W.norm_ball
-            assert B.polyhedron.dim() == W.triangulation.homologyH1().rank(), W.manifold.name()+', force_simplicial=True'
-            assert not W.has_internal_homology, W.manifold.name()+', force_simplicial=True'
-            del3 = tnorm.kernel.simplicial.del3_matrix(W.triangulation)
-            del2 = tnorm.kernel.simplicial.del2_matrix(W.triangulation)
-            assert (del2*del3).is_zero(), W.manifold.name()+', force_simplicial=True'
-            for i in range(W.qtons().size()):
-                assert (del2*W.simplicial_class(i)).is_zero(), W.manifold.name()+', force_simplicial=True'
-                assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold.name()+', force_simplicial=True'
-            assert B.polyhedron.is_compact(), W.manifold.name()+', force_simplicial=True'
-    
+            W_sim = tnorm.load(name, quiet=True, force_simplicial_homology=True)
+            B_sim = W_sim.norm_ball
+            assert B_sim.polyhedron.dim() == W_sim.triangulation.homologyH1().rank(), W_sim.manifold.name()+', force_simplicial=True'
+            assert not W_sim.has_internal_homology, W_sim.manifold.name()+', force_simplicial=True'
+            del3 = tnorm.kernel.simplicial.del3_matrix(W_sim.triangulation)
+            del2 = tnorm.kernel.simplicial.del2_matrix(W_sim.triangulation)
+            assert (del2*del3).is_zero(), W_sim.manifold.name()+', force_simplicial=True'
+            for i in range(W_sim.qtons().size()):
+                assert (del2*W_sim.simplicial_class(i)).is_zero(), W_sim.manifold.name()+', force_simplicial=True'
+                assert W_sim.euler_char(i) == 2-2*W_sim.genus(i)-W_sim.num_boundary_comps(i), W_sim.manifold.name()+', force_simplicial=True'
+            assert B_sim.polyhedron.is_compact(), W_sim.manifold.name()+', force_simplicial=True'
+            P_sim = B_sim.polyhedron
+            P = B.polyhedron
+            for i in range(len(B.vertices)):
+                B.vertices[i].coords == B_sim.vertices[i].coords
+                B.vertices[i].euler_char == B_sim.vertices[i].euler_char
+                B.vertices[i].genus == B_sim.vertices[i].genus
+                
 

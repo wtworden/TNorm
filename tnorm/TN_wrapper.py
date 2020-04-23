@@ -55,12 +55,15 @@ class TN_wrapper():
 	"""
 	def __init__(self, manifold, qtons=None, quiet=False, tracker=False, allows_non_admissible=False, bdy_H1_basis='natural', force_simplicial_homology=False):
 		
+		self.triangulation = None
 		if isinstance(manifold,str):
 			self.manifold = snappy.Manifold(manifold)
 		elif isinstance(manifold, regina.engine.SnapPeaTriangulation):
 			self.manifold = snappy.Manifold(manifold.snapPea())
+			self.triangulation = manifold
 		elif isinstance(manifold, regina.engine.Triangulation3):
 			self.manifold = snappy.Manifold(manifold.snapPea())
+			self.triangulation = manifold
 		elif isinstance(manifold, snappy.Manifold):
 			self.manifold = manifold
 		elif isinstance(manifold, snappy.Triangulation):
@@ -91,8 +94,10 @@ class TN_wrapper():
 			self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
 			self.manifold_is_closed = False
 		else:
-			self.triangulation = regina.Triangulation3(self.manifold._to_string())
-			self.triangulation.intelligentSimplify()
+			if self.triangulation == None:
+				self.triangulation = regina.Triangulation3(self.manifold._to_string())
+				for _ in range(10):
+					self.triangulation.intelligentSimplify()
 			self.manifold_is_closed = True
 			self.bdy_H1_basis = None
 		if not self.triangulation.isOriented():
