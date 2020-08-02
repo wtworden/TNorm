@@ -33,3 +33,7 @@ setuptools.setup(
          "Operating System :: OS Independent",
     ],
  )
+
+
+## python setup.py sdist bdist_wheel --universal
+## twine upload dist/*

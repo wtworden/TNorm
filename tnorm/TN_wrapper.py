@@ -17,10 +17,10 @@ import itertools
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
 from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2, qtons_image_in_C2
-from tnorm.kernel.boundary import bdy_slopes_unoriented_
+from tnorm.kernel.boundary import bdy_slopes_unoriented_, signed_bdy_maps
 from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
-from tnorm.kernel.homology import qtons_to_H1bdy, homology_map
-from tnorm.kernel.matrices import intersection_mat, oriented_quads_mat
+from tnorm.kernel.homology import _map_to_H2, _map_to_H1bdy
+from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
 from tnorm.kernel.regina_helpers import regina_to_sage_int
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
@@ -91,7 +91,7 @@ class TN_wrapper():
 
 			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
 			self._angle_structure = solve_lin_gluingEq(self.triangulation)
-			self._intersection_matrices = [intersection_mat(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
+			self._peripheral_curve_mats = [peripheral_curve_mats(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
 			self.manifold_is_closed = False
 		else:
 			if self.triangulation == None:
@@ -117,10 +117,12 @@ class TN_wrapper():
 		self._is_norm_minimizing = {}
 		self._is_admissible = {}
 		self._qtons_image_in_C2 = {}
+		self._is_embedded = {}
+		self._num_H1bdy_comps = {}
 
 		if self.manifold.num_cusps() > 0:
+			self._boundary_slopes = {}
 			self._map_to_H1bdy = {}
-			self._regina_bdy_slopes = {}
 
 		if not self._QUIET:		
 			print('Enumerating quad transversely oriented normal surfaces (qtons)... ', end='')
@@ -192,12 +194,11 @@ class TN_wrapper():
 				ind = int(qtons)
 			except TypeError:
 				ind = int(qtons.name())
-			if ind in self._map_to_H2:
-				return self._map_to_H2[ind]
-			else:
+			if not ind in self._map_to_H2:
 				s_H2 = self._map_H2_to_standard_basis*(self._qtons_image_in_C2[ind]-self._project_to_im_del3*self._qtons_image_in_C2[ind])
 				self._map_to_H2[ind] = s_H2
-				return s_H2
+			
+			return self._map_to_H2[ind]
 		else:
 			return None
 
@@ -246,195 +247,15 @@ class TN_wrapper():
 		except TypeError:
 			ind = int(qtons.name())
 			
-		if ind in self._euler_char:
-			return self._euler_char[ind]
-		else:
+		if not ind in self._euler_char:
 			s = self.qtons().surface(ind)
 			if not self.manifold_is_closed:
 				ec = euler_char_(s,self._angle_structure)
 			else:
 				ec = regina_to_sage_int(s.eulerChar())
 			self._euler_char[ind] = ec
-			return ec
-
-	def boundary_slopes(self,qtons,quad_mat=None):
-		"""
-		Return the boundary slope of the given surface in H1(\partial M), with respect to the basis W.bdy_H1_basis. 
-		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
-
-		Note that this slope may not be the same as W.regina_boundary_slopes(surface), as Regina computes slopes based on
-		an orientation that depends on the direction that the spun normal surface spins into the cusp. Our orientation on 
-		boundary slopes is instead based on the transverse orientation of the surface.
-
-		sage: W._map_to_H1bdy(3)    # return image in H1(\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		[(-1, 0), (0, 1), (-1, 0)]
-		"""
-		if self.manifold_is_closed:
-			return []
-		else:
-			try:
-				ind = int(qtons)
-			except TypeError:
-				ind = int(qtons.name())
-	
-			if ind in self._map_to_H1bdy:
-				return self._map_to_H1bdy[ind]
-			else:
-				s = self.qtons().surface(ind)
-				h1 = qtons_to_H1bdy(s, self,quad_mat)
-				self._map_to_H1bdy[ind] = h1
-				return h1
-
-	def regina_bdy_slopes(self,qtons,quad_mat=None):
-		""" Return boundary slopes that result if we ignore transverse orientation, and cancel slopes that spin into the cusp
-		in opposite directions. This may differ from slopes as computed by Regina by a sign, but should otherwise be the same.
-		"""
-
-		if self.manifold_is_closed:
-			return []
-		else:
-			try:
-				ind = int(qtons)
-			except TypeError:
-				ind = int(qtons.name())
-	
-			if ind in self._regina_bdy_slopes:
-				return self._regina_bdy_slopes[ind]
-			else:
-				s = self.qtons().surface(ind)
-				rbs = bdy_slopes_unoriented_(s, self,quad_mat)
-				self._regina_bdy_slopes[ind] = rbs
-				return rbs
-
-	def map_to_H2(self,qtons):
-		"""
-		Return the image of the given surface in H2(M, \partial M). Argument can be a surface (regina quad transversely oriented
-		normal surface) or the index of a surface.
-
-		sage: W.mapToH2(3)    # return the image in H2(M,\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		(0,1,0)
-
-		"""
-		if not self.uses_simplicial_homology:
-			try:
-				ind = int(qtons)
-			except TypeError:
-				ind = int(qtons.name())
-	
-			if ind in self._map_to_H2:
-				return self._map_to_H2[ind]
-			else:
-				s = self.qtons().surface(ind)
-				slopes = self.boundary_slopes(s)
-				s_H2 = vector([slopes[i][1] for i in range(len(slopes))])
-				self._map_to_H2[ind] = s_H2
-				return s_H2
-		else:
-			return self._simplicial_map_to_H2(qtons)
-
-	def simplicial_class(self,qtons):
-		""" Return the vector in the dimension 2 chain group C2 corresponding to the qtons surface. The i^th coordinate
-			of this vector corresponds to the number of triangles of index i, as indexed by Regina, with orientation positive
-			if the transverse orientation of the surface points toward the tetrahedron triangle(i).front(). 
-		"""
-		if not self.uses_simplicial_homology:
-			return None
-		else:
-			try:
-				ind = int(qtons)
-			except TypeError:
-				ind = int(qtons.name())
-	
-			if ind in self._qtons_image_in_C2:
-				c = self._qtons_image_in_C2[ind]
-			else:
-				c = qtons_image_in_C2(self,self._quad_map_to_C2)
-				self._qtons_image_in_C2[ind] = c
-			return c
-
-	def over_facet(self, qtons, as_string=False):
-		"""Returns the facet of the norm ball that the qtons surface is above. E.g., <0 1 5> corresponds to the facet 
-		with vertices 0, 1, and 5. 
-		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._over_facet:
-			f = self._over_facet[ind]
-		else:
-			v = self.map_to_H2(ind)
-			f = over_facet_(v,self.norm_ball.polyhedron)
-			self._over_facet[ind] = f
-		if as_string:
-			return None if f==None else '<{}>'.format(' '.join([str(v.index()) for v in f.vertices()]))
-		else:
-			return f
-
-	def is_norm_minimizing(self, qtons):
-		"""Return True if the given qtons surface is Thurston norm minimizing.
-		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._is_norm_minimizing:
-			return self._is_norm_minimizing[ind]
-		else:
-			v = self.map_to_H2(ind)
-			if not self.norm_ball.polyhedron.interior_contains(v):
-				self._is_norm_minimizing[ind] = True
-				return True
-			else:
-				self._is_norm_minimizing[ind] = False
-				return False
-
-#	def locally_compatible(self,qtons1,qtons2):
-#		pass
-
-	def is_admissible(self, qtons):
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._is_admissible:
-			return self._is_admissible[ind]
-		else:
-			s = self.qtons().surface(ind)
-			mat = oriented_quads_mat(s)
-			for row in mat:
-				nonzero = [i for i in range(0,6,2) if ( row[i]!=0 or row[i+1]!=0 )]
-				if len(nonzero) > 1:
-					self._is_admissible[ind] = False
-					return False
-			self._is_admissible[ind] = True
-			return True
-
-	def map_to_ball(self, qtons):
-		"""
-		Return the image of the given surface in H2(M, \partial M), then divide by Euler characteristic. Argument can be a surface (regina oriented
-		spun normal surface) or the index of a surface.
-
-		"""
-		try:
-			ind = int(qtons)
-		except TypeError:
-			ind = int(qtons.name())
-
-		if ind in self._map_to_ball:
-			return self._map_to_ball[ind]
-		else:
-			image_in_H2 = self.map_to_H2(ind)
-			if self.euler_char(ind) < 0:
-				mtb = tuple([QQ(i)/(-self.euler_char(ind)) for i in image_in_H2])
-				self._map_to_ball[ind] = mtb
-				return mtb
-			else:
-				self._map_to_ball[ind] = float('inf')
-				return float('inf')
+		
+		return self._euler_char[ind]
 
 	def genus(self,qtons):
 		"""
@@ -465,15 +286,193 @@ class TN_wrapper():
 			ind = int(qtons.name())
 			s = qtons
 
-		if ind in self._num_boundary_comps:
-			return self._num_boundary_comps[ind]
-		else:
+		if not ind in self._num_boundary_comps:
 			nbc = 0
-			b = self.boundary_slopes(ind)
-			for slope in b:
+			pos, neg = self.boundary_slopes(ind)
+			for slope in pos:
+				nbc += gcd(slope[0],slope[1])
+			for slope in neg:
 				nbc += gcd(slope[0],slope[1])
 			self._num_boundary_comps[ind] = nbc
-			return nbc
+
+		return self._num_boundary_comps[ind]	
+
+	def boundary_slopes(self,qtons):
+		"""
+		Return the positive and negative boundary slopes of the given surface in H1(\partial M), with respect to the basis W.bdy_H1_basis. 
+		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
+
+		sage: W._map_to_H1bdy(3)    # return image in H1(\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		[(-1, 0), (0, 1), (-1, 0)]
+		"""
+		if self.manifold_is_closed:
+			return []
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._boundary_slopes:
+				s = self.qtons().surface(ind)
+				pos_bdy, neg_bdy = signed_bdy_maps(s, self)
+				self._boundary_slopes[ind] = pos_bdy, neg_bdy
+			
+			return self._boundary_slopes[ind]
+
+	def H1bdy_slopes(self, qtons):
+		
+		if self.manifold_is_closed:
+			return []
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._map_to_H1bdy:
+				s = self.qtons().surface(ind)
+				slopes = _map_to_H1bdy(s, self)
+				self._map_to_H1bdy[ind] = slopes
+			
+			return self._map_to_H1bdy[ind]	
+
+	def num_H1bdy_comps(self, qtons):
+		try:
+			ind = int(qtons)
+			s = self.qtons().surface(ind)
+		except TypeError:
+			ind = int(qtons.name())
+			s = qtons
+
+		if not ind in self._num_H1bdy_comps:
+			nbc = 0
+			slopes = self.H1bdy_slopes(ind)
+			for slope in slopes:
+				nbc += gcd(slope[0],slope[1])
+			self._num_H1bdy_comps[ind] = nbc
+
+		return self._num_H1bdy_comps[ind]	
+
+	def map_to_H2(self, qtons):
+		"""
+		Return the image of the given surface in H2(M, \partial M). Argument can be a surface (regina quad transversely oriented
+		normal surface) or the index of a surface.
+
+		sage: W.mapToH2(3)    # return the image in H2(M,\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		(0,1,0)
+
+		"""
+		if not self.uses_simplicial_homology:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._map_to_H2:
+				s = self.qtons().surface(ind)
+				self._map_to_H2[ind] = _map_to_H2(s, self)
+			
+			return self._map_to_H2[ind]
+		else:
+			return self._simplicial_map_to_H2(qtons)
+
+	def simplicial_class(self,qtons):
+		""" Return the vector in the dimension 2 chain group C2 corresponding to the qtons surface. The i^th coordinate
+			of this vector corresponds to the number of triangles of index i, as indexed by Regina, with orientation positive
+			if the transverse orientation of the surface points toward the tetrahedron triangle(i).front(). 
+		"""
+		if not self.uses_simplicial_homology:
+			return None
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._qtons_image_in_C2:
+				c = qtons_image_in_C2(self,self._quad_map_to_C2)
+				self._qtons_image_in_C2[ind] = c
+
+			return self._qtons_image_in_C2[ind]
+
+	def over_facet(self, qtons, as_string=False):
+		"""Returns the facet of the norm ball that the qtons surface is above. E.g., <0 1 5> corresponds to the facet 
+		with vertices 0, 1, and 5. 
+		"""
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if ind in self._over_facet:
+			f = self._over_facet[ind]
+		else:
+			v = self.map_to_H2(ind)
+			f = over_facet_(v,self.norm_ball.polyhedron)
+			self._over_facet[ind] = f
+		if as_string:
+			return None if f==None else '<{}>'.format(' '.join([str(v.index()) for v in f.vertices()]))
+		else:
+			return f
+
+	def is_norm_minimizing(self, qtons):
+		"""Return True if the given qtons surface is Thurston norm minimizing.
+		"""
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._is_norm_minimizing:
+			v = self.map_to_H2(ind)
+			if not self.norm_ball.polyhedron.interior_contains(v):
+				self._is_norm_minimizing[ind] = True
+				return True
+			else:
+				self._is_norm_minimizing[ind] = False
+
+		return self._is_norm_minimizing[ind]
+
+	def is_admissible(self, qtons):
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._is_admissible:
+			s = self.qtons().surface(ind)
+			mat = oriented_quads_mat(s)
+			for row in mat:
+				nonzero = [i for i in range(0,6,2) if ( row[i]!=0 or row[i+1]!=0 )]
+				if len(nonzero) > 1:
+					self._is_admissible[ind] = False
+					return False
+			self._is_admissible[ind] = True
+
+		return self._is_admissible[ind]
+
+	def map_to_ball(self, qtons):
+		"""
+		Return the image of the given surface in H2(M, \partial M), then divide by Euler characteristic. Argument can be a surface (regina oriented
+		spun normal surface) or the index of a surface.
+
+		"""
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._map_to_ball:
+			image_in_H2 = self.map_to_H2(ind)
+			if self.euler_char(ind) < 0:
+				mtb = tuple([QQ(i)/(-self.euler_char(ind)) for i in image_in_H2])
+				self._map_to_ball[ind] = mtb
+				return mtb
+			else:
+				self._map_to_ball[ind] = float('inf')
+
+		return self._map_to_ball[ind]
 
 		
 	def _image_in_H2M(self):
@@ -524,19 +523,8 @@ class TN_wrapper():
 				reps = sorted(reps,key=lambda x: sum(self.simplicial_class(x).apply_map(abs)))
 				points[nzd] = reps[0] # get the index of the rep with minimal L^1 norm
 			else:
-				# order according to how well self.boundary_slopes(i) agrees with self.regina_bdy_slopes(i)
-				if self.num_boundary_comps != 0:
-					def sort_fn(rep):
-						bs = self.boundary_slopes(rep)
-						rbs = self.regina_bdy_slopes(rep)
-						if bs == rbs:
-							return 0
-						elif all([rbs[i] in [bs[i],tuple([-bs[i][j] for j in range(len(bs[i]))])] for i in range(len(rbs))]):
-							return 1
-						else:
-							return 2
-					reps = sorted(reps,key=lambda x: sort_fn(x))
-				points[nzd] = reps[0]
+				reps = sorted(reps,key=lambda x: self.num_boundary_comps(x))
+				points[nzd] = reps[0] # get the index of the rep with the minimal number of bdy components
 
 		return points, rays
 
@@ -629,6 +617,8 @@ class TN_wrapper():
 
 			except IndexError:
 				pass
+
+			### below needs to be fixed. Currently does not account for virtual fibers.
 			if A_norm <= 0 or not A.is_monic():
 				self.is_fibered = False
 				ball.confirmed = True
@@ -640,7 +630,7 @@ class TN_wrapper():
 				ball = TNormBall(Vertices, Rays, polyhedron)
 				ball.confirmed = True
 			elif A_norm == abs(v.euler_char):
-				assert v.num_boundary_comps == b
+				assert self.num_H1bdy_comps(v.surface_index) == b
 				self.is_fibered = 'unknown'
 				ball.confirmed = True
 			elif A_norm < abs(v.euler_char):

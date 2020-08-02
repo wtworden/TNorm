@@ -10,12 +10,14 @@ from tnorm.sage_types import *
 
 
 ### identify which cusp the given vertex of the given tetrahedron is in
-def get_cusp_index(T,tet,vertex):
-    return T.tetrahedron(int(tet)).vertex(int(vertex)).boundaryComponent().index()
+#def get_cusp_index(T,tet,vertex):
+#    return T.tetrahedron(int(tet)).vertex(int(vertex)).boundaryComponent().index()
 
 ### return True if vertex "vert" of tetrahedron "tet" is in given cusp
 def in_cusp(T,tet,vert,cusp):
-    return get_cusp_index(T,tet,vert)==cusp
+    return T.tetrahedron(int(tet)).vertex(int(vert)) == T.cusp(cusp).vertex()
+
+#    return get_cusp_index(T,tet,vert)==cusp
 
 
 ### convert regina types (integers, rational, matrices) to sage types

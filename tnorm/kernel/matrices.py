@@ -19,7 +19,7 @@ from tnorm.kernel.regina_helpers import get_oriented_quads, in_cusp
 ###               .   |                       .                         |
 ###               tk  |_                                               _|
 
-def intersection_mat(M,T,cusp):
+def peripheral_curve_mats(M,T,cusp):
     cusps = T.countCusps()
     tets = T.size()
     try:
@@ -33,8 +33,6 @@ def intersection_mat(M,T,cusp):
     return (mat_l,mat_m)
 
 
-
-
 ### Quad coordinate of the surface as a Matrix. Row i corresponds to tetrahedron i, and each row has
 ### six entries corresponding to the six quad types: (0,1), (2,3), (0,2), (1,3), (0,3), (1,2) in that order.
 def oriented_quads_mat(oriented_spun_surface):
@@ -43,8 +41,64 @@ def oriented_quads_mat(oriented_spun_surface):
     return Matrix([[get_oriented_quads(s,i,j,k) for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]] for i in range(T.size())])
 
 
-### Matrix that encodes how curves intersect with quad types.
-def sign_matrix():
+### Same form as above matrix, but only picks up quads that have a boundary arc isotopic into the given
+### cusp
+def quad_bdy_mat(oriented_spun_surface, cusp):
+    s = oriented_spun_surface
+    T = s.triangulation()
+    quads_mat = []
+    for i in range(T.size()):
+        row = []
+        for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]:
+            if ( in_cusp(T,i,j,cusp) or in_cusp(T,i,k,cusp) ):
+                row.append(get_oriented_quads(s,i,j,k))
+            else:
+                row.append(0)
+        quads_mat.append(row)
+    return Matrix(quads_mat)
+
+
+### Matrix that encodes how curves intersect with quad types, restricted to intersections
+### that contribute to the positive boundary (see Cooper--Tillmann--Worden Fig 5).def pos_intx_matrix():
+def pos_intersection_mat():
+    return Matrix([[0, 0, 0, 0, 0, 0],
+                   [1,0, 0, 0, 0, 0],
+                   [0, 0, 1,0, 0, 0],
+                   [0, 0, 0, 0, 1,0],
+                   [1,0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 0],
+                   [0, 0, 0, 0,0, 1],
+                   [0, 0,0, 1, 0, 0],
+                   [0, 0, 1,0, 0, 0],
+                   [0, 0, 0, 0,0, 1],
+                   [0, 0, 0, 0, 0, 0],
+                   [0, 1, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 1,0],
+                   [0, 0,0, 1, 0, 0],
+                   [0, 1, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 0]])
+
+### Matrix that encodes how curves intersect with quad types, restricted to intersections
+### that contribute to the negative boundary (see Cooper--Tillmann--Worden Fig 5).
+def neg_intersection_mat():
+    return Matrix([[0, 0, 0, 0, 0, 0],
+                   [0,-1, 0, 0, 0, 0],
+                   [0, 0, 0,-1, 0, 0],
+                   [0, 0, 0, 0, 0,-1],
+                   [0,-1, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 0],
+                   [0, 0, 0, 0,-1, 0],
+                   [0, 0,-1, 0, 0, 0],
+                   [0, 0, 0,-1, 0, 0],
+                   [0, 0, 0, 0,-1, 0],
+                   [0, 0, 0, 0, 0, 0],
+                   [-1, 0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0,-1],
+                   [0, 0,-1, 0, 0, 0],
+                   [-1, 0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0, 0]])
+### Matrix that encodes how curves intersect with quad types (see Cooper--Tillmann--Worden Fig 5).
+def intersection_mat():
     return Matrix([[0, 0, 0, 0, 0, 0],
                    [1,-1, 0, 0, 0, 0],
                    [0, 0, 1,-1, 0, 0],
@@ -61,7 +115,6 @@ def sign_matrix():
                    [0, 0,-1, 1, 0, 0],
                    [-1, 1, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0, 0]])
-
 def dot_product(v,w):
     return v.dot_product(w)
 

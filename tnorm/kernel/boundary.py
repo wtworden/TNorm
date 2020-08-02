@@ -3,10 +3,9 @@ import tnorm.constants
 import tnorm.kernel.matrices
 import tnorm.kernel.regina_helpers
 
-from tnorm.kernel.matrices import oriented_quads_mat, intersection_mat
+from tnorm.kernel.matrices import oriented_quads_mat, peripheral_curve_mats, quad_bdy_mat, intersection_mat, pos_intersection_mat, neg_intersection_mat  
 from tnorm.kernel.regina_helpers import regina_to_sage_int, regina_to_sage_mat
 
-from tnorm.constants import ABS_SIGN_MATRIX
 
 from tnorm.sage_types import *
 
@@ -21,6 +20,37 @@ def get_quads(spun_surface,tet,v1,v2):
     v2 = int(v2)
     return regina_to_sage_int(s.quads(tet,v2-int(1)))
 
+
+### this maps an oriented spun normal surface to H_1(bdy M; \ZZ)
+def signed_bdy_maps(oriented_spun_surface, TN_wrapper):
+    s = oriented_spun_surface
+    T = s.triangulation()
+
+    M = TN_wrapper.manifold
+    periph_mats = TN_wrapper._peripheral_curve_mats
+
+    pos_intx_mat, neg_intx_mat =  pos_intersection_mat(), neg_intersection_mat()
+    pos_slopes = []                   # on a surface affects boundary orientations.
+    neg_slopes = []
+    quads_mat = oriented_quads_mat(s)
+    for c in range(T.countCusps()):
+        periph_mat = periph_mats[c] # get the matrix that encodes meridian and longitude for cusp c.
+        
+        iota_lambda_pos=0
+        iota_mu_pos=0
+        iota_lambda_neg=0
+        iota_mu_neg=0
+        for i in range(T.size()):
+            iota_lambda_pos += Integer(periph_mat[0][i]*pos_intx_mat*quads_mat[i])
+            iota_mu_pos += Integer(periph_mat[1][i]*pos_intx_mat*quads_mat[i])
+            iota_lambda_neg += Integer(periph_mat[0][i]*neg_intx_mat*quads_mat[i])
+            iota_mu_neg += Integer(periph_mat[1][i]*neg_intx_mat*quads_mat[i])
+
+  
+        pos_slopes.append((-iota_lambda_pos,iota_mu_pos))
+        neg_slopes.append((-iota_lambda_neg,iota_mu_neg))
+    return pos_slopes, neg_slopes
+
 ## this map is almost the same as qtons_to_H1bdy(), except the SIGN_MATRIX is replaced by 
 ## SIGN_MATRIX.apply_map(abs). The result is the boundary slope for the embedded, possibly non-orientable,
 ## normal surface obtained by forgetting orientation. The reason this could be non-orientable is 
@@ -33,50 +63,50 @@ def bdy_slopes_unoriented_(oriented_spun_surface, TN_wrapper, quad_mat=None):
     T = s.triangulation()
 
     M = TN_wrapper.manifold
-    int_matrices = TN_wrapper._intersection_matrices
+    peripheral_curve_matrices = TN_wrapper._peripheral_curve_mats
 
-    sign_mat = ABS_SIGN_MATRIX # transverse orientation is ignored.
+    intersection_mat = intersection_mat().apply_map(abs)
     slopes = [] 
     for c in range(T.countCusps()):
-        int_mat = int_matrices[c] # get the matrix that encodes meridian and longitude for cusp c.
+        periph_mat = peripheral_curve_matrices[c] # get the matrix that encodes meridian and longitude for cusp c.
         if quad_mat == None:
             quad_mat = oriented_quads_mat(s) # get the matrix that encodes quad coordinates for s.
-        iota_lambda = QQ(sum([int_mat[0][i]*sign_mat*quad_mat[i] for i in range(T.size())]))
-        iota_mu = QQ(sum([int_mat[1][i]*sign_mat*quad_mat[i] for i in range(T.size())]))
+        iota_lambda = QQ(sum([periph_mat[0][i]*intersection_mat*quad_mat[i] for i in range(T.size())]))
+        iota_mu = QQ(sum([periph_mat[1][i]*intersection_mat*quad_mat[i] for i in range(T.size())]))
         slopes.append((-iota_lambda,iota_mu))
     return slopes
 
 
-def __boundary_slopes_(spun_surface, W=None):
-    s = spun_surface
-    T = s.triangulation()
-    if W == None:
-        M = snappy.Manifold(T.snapPea())
-        int_matrices = [intersection_mat(M, T, cusp) for cusp in range(T.countCusps())]
-    else:
-        M = W.manifold
-        int_matrices = W._intersection_matrices
-    slopes = []
-    for cusp in range(T.countCusps()):
-        iota_lambda = 0
-        iota_mu = 0
-        mat = int_matrices[cusp]
-        for t in range(T.size()):
-            for v in range(4):
-                faces = [0,1,2,3]
-                faces.remove(v)
-                for f in faces:
-                    if 0 in [v,f]:
-                        j,k = sorted([v,f])
-                    else:
-                        verts = [0,1,2,3]
-                        verts.remove(v)
-                        verts.remove(f)
-                        j,k = verts
-                    iota_lambda += mat[0][t][4*v+f]*get_quads(s,t,j,k)
-                    iota_mu += mat[1][t][4*v+f]*get_quads(s,t,j,k)
-        slopes.append((-iota_lambda,iota_mu))
-    return slopes
+#def __boundary_slopes_(spun_surface, W=None):
+#    s = spun_surface
+#    T = s.triangulation()
+#    if W == None:
+#        M = snappy.Manifold(T.snapPea())
+#        int_matrices = [intersection_mat(M, T, cusp) for cusp in range(T.countCusps())]
+#    else:
+#        M = W.manifold
+#        int_matrices = W._peripheral_curve_mats
+#    slopes = []
+#    for cusp in range(T.countCusps()):
+#        iota_lambda = 0
+#        iota_mu = 0
+#        mat = int_matrices[cusp]
+#        for t in range(T.size()):
+#            for v in range(4):
+#                faces = [0,1,2,3]
+#                faces.remove(v)
+#                for f in faces:
+#                    if 0 in [v,f]:
+#                        j,k = sorted([v,f])
+#                    else:
+#                        verts = [0,1,2,3]
+#                        verts.remove(v)
+#                        verts.remove(f)
+#                        j,k = verts
+#                    iota_lambda += mat[0][t][4*v+f]*get_quads(s,t,j,k)
+#                    iota_mu += mat[1][t][4*v+f]*get_quads(s,t,j,k)
+#        slopes.append((-iota_lambda,iota_mu))
+#    return slopes
 
 
 
