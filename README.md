@@ -70,12 +70,11 @@ More detailed install instructions for MacOS:
 	
 		$ cd ~/Downloads; sage -python -m fix_mac_sage9.fix
 
-5. Install tnorm (Snappy and Regina will be installed automatically):
+5. Install tnorm (snappy and sageRegina will be installed automatically, if they are not already installed):
 	
 	5a: In Terminal, type: 
 	
 		$ sage -python -m pip install tnorm
-
 
 
 
