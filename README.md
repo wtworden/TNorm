@@ -4,6 +4,8 @@ TNorm is a package for computing the Thurston norm unit ball of finite volume or
 
 $ sage -pip install tnorm
 
+Mac Users: If you have sage installed, and you have already fixed its SSL issue and (if you are on MacOS 10.14 or later) the Mac security issues, and you have set sage as an alias for the full path to sage, then there is a good chance the above command will work. If you are starting from scratch, scroll down to the bottom for detailed instructions for overcoming the hurdles mentioned here.
+
 To run the tnorm graphical user interface app:
 
 $ sage -python -m tnorm.app
@@ -27,3 +29,37 @@ TO DO:
 * remove Sage dependence.
 * better documentation throughout.
 * some optimization for speed is probably still possible.
+
+More detailed install instructions for MacOS:
+
+1. Install latest Sage:
+	1a. Download from http://mirrors.mit.edu/sage/osx/intel/index.html. Choose the most recent version, ending in x86_64.dmg.
+	1b. double click on the downloaded file, then after it unpacks, copy the SageMath folder to your Applications folder
+2. Unquarantine sage:
+	2a. open Terminal (in Applications/Utilities)
+	2b. In terminal, type:
+		 xattr -rd com.apple.quarantine /Applications/SageMath
+		
+		(note: the part in red is the path to SageMath. This may be different if you put it (for example) in the 
+		applications folder at the user lever, i.e., /Users/your_username/Applications/SageMath)
+
+	2c. Open System Preferences —> Security and Privacy —> Privacy, then scroll on the left side down to "Full Disk Access" and select it. On the right side (after clicking the lock and entering password, if needed), click “+” button, then navigate to Applications/SageMath/ and select sage.
+
+3. Make a sage alias:
+	3a. in Terminal, type “open -e .bash_profile”
+	3b. this will open a file in TextEdit. At the top, add the line alias sage='/Applications/SageMath/sage’ (change the path as needed if your SageMath is in a different location)
+
+4. Fix Sage’s SSL (this is now easy thanks to Nathan Dunfield):
+	4a. Download fix_mac_sage9.tar.gz , then double click on it to unpack it.
+	4b. In Terminal, type: cd ~/Downloads; sage -python -m fix_mac_sage9.fix
+
+5. Install tnorm (Snappy and Regina will be installed automatically):
+	5a: In Terminal, type: sage -python -m pip install tnorm
+
+6. Launch tnorm (user interface): In Terminal, type: sage -python -m tnorm.app
+
+
+
+
+
+
