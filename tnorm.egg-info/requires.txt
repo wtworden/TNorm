@@ -1,0 +1,4 @@
+queue
+networkx>=2.4
+snappy>=2.7
+sageRegina>=5.1.9

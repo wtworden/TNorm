@@ -11,8 +11,8 @@ from math import ceil
 def make_qtons_table(tnorm_app):
 #    try:
     qd = tnorm_app.wrapper.qtons_info
-    treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], qd[i]['num_boundary_comps'], str(qd[i]['boundary_slopes']), str(qd[i]['spinning_slopes']), qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_facet']) for i in qd]
-    column_names = ('qtons index', 'image in H2', 'euler char', 'num bdy comps', 'boundary slopes', 'spinning_slopes', 'genus','norm minimizing?','over facet')
+    treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], qd[i]['num_boundary_comps'], str(qd[i]['boundary_slopes']), qd[i]['genus'], qd[i]['is_norm_minimizing'], qd[i]['over_facet']) for i in qd]
+    column_names = ('qtons index', 'image in H2', 'euler char', 'num bdy comps', 'boundary slopes', 'genus','norm minimizing?','over facet')
     make_treeview_table(tnorm_app.QtonsTab,treedata,column_names, True)
 #    except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
@@ -28,16 +28,16 @@ def make_vertices_table(tnorm_app, frame, vert_list, with_scrollbar=True):
     W = tnorm_app.wrapper
     B = tnorm_app.ball
     if vert_list == 'all':
-        vert_list = range(len(B.vertices))
+        vert_list = range(len(B.vertices()))
     height = len(vert_list)
     width = 9
-    verts = {i:B.vertices[i] for i in vert_list}
-    column_names = ('vertex', 'qtons surface','qtons index','coords','euler char', 'boundary slopes', 'spinning slopes')
-    treedata = [(i, 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps), verts[i].surface_index,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), str(W.regina_bdy_slopes(verts[i].surface_index))) for i in vert_list]
+    verts = {i:B.vertices()[i] for i in vert_list}
+    column_names = ('vertex', 'qtons surface','qtons index','coords','euler char', 'boundary slopes')
+    treedata = [(i, 'S_{},{}'.format(verts[i].genus(), verts[i].num_boundary_comps()), verts[i].qtons_index(), verts[i].coords(), verts[i].euler_char(), str(verts[i].boundary_slopes())) for i in vert_list]
     make_treeview_table(frame, treedata, column_names, with_scrollbar)
 
 def make_facets_table(tnorm_app, frame, dim):
-    if dim in [0,tnorm_app.ball.dimension]:
+    if dim in [0,tnorm_app.ball.dimension()]:
         make_vertices_table(tnorm_app, frame, 'all')
     else:
         W = tnorm_app.wrapper
@@ -48,12 +48,12 @@ def make_facets_table(tnorm_app, frame, dim):
         treedata = []
         for j in range(len(facets)):
             f = facets[j]
-            vert_list = [v.index for v in f.vertices]
-            verts = {i:B.vertices[i] for i in vert_list}
+            vert_list = [v.index() for v in f.vertices()]
+            verts = {i:B.vertices()[i] for i in vert_list}
             v0 = vert_list[0]
-            treedata.append((j,v0,verts[v0].coords, verts[v0].euler_char, str(verts[v0].boundary_slopes), 'S_{},{}'.format(verts[v0].genus, verts[v0].num_boundary_comps)))
+            treedata.append((j,v0,verts[v0].coords(), verts[v0].euler_char(), str(verts[v0].boundary_slopes()), 'S_{},{}'.format(verts[v0].genus(), verts[v0].num_boundary_comps())))
             for i in vert_list[1:]:
-                treedata.append(('',i,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps)))
+                treedata.append(('',i,verts[i].coords(), verts[i].euler_char(), str(verts[i].boundary_slopes()), 'S_{},{}'.format(verts[i].genus(), verts[i].num_boundary_comps())))
             treedata.append(('','','','','','',''))
         make_treeview_table(frame, treedata, column_names)
     tnorm_app.stop_spin()
@@ -62,20 +62,23 @@ def make_dnb_vertices_table(tnorm_app, frame):
     W = tnorm_app.wrapper
     B = tnorm_app.ball
     DB = tnorm_app.dual_ball
-    dim = B.dimension - 1
+    dim = B.dimension() - 1
     facets = B.facets(dim)
-    assert DB.num_vertices == len(facets)
+    assert DB.num_vertices() == len(facets)
     width = 7
     column_names = ('vertex', 'dual to face','vertices of dual face','coords','euler char', 'boundary slopes', 'qtons surface')
     treedata = []
     for j in range(len(facets)):
         f = facets[j]
-        vert_list = [v.index for v in f.vertices]
-        verts = {i:B.vertices[i] for i in vert_list}
+        if dim == 0:
+            vert_list = [f.index()]
+        else:
+            vert_list = [v.index() for v in f.vertices()]
+        verts = {i:B.vertices()[i] for i in vert_list}
         v0 = vert_list[0]
-        treedata.append((j,j,v0,verts[v0].coords, verts[v0].euler_char, str(verts[v0].boundary_slopes), 'S_{},{}'.format(verts[v0].genus, verts[v0].num_boundary_comps)))
+        treedata.append((j,j,v0,verts[v0].coords(), verts[v0].euler_char(), str(verts[v0].boundary_slopes()), 'S_{},{}'.format(verts[v0].genus(), verts[v0].num_boundary_comps())))
         for i in vert_list[1:]:
-            treedata.append(('','',i,verts[i].coords, verts[i].euler_char, str(verts[i].boundary_slopes), 'S_{},{}'.format(verts[i].genus, verts[i].num_boundary_comps)))
+            treedata.append(('','',i,verts[i].coords(), verts[i].euler_char(), str(verts[i].boundary_slopes()), 'S_{},{}'.format(verts[i].genus(), verts[i].num_boundary_comps())))
         treedata.append(('','','','','','',''))
     make_treeview_table(frame, treedata, column_names)
     tnorm_app.stop_spin()

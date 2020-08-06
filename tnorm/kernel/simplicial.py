@@ -90,7 +90,7 @@ def kernel_of_del2(TN_Wrapper, C2_quad_map):
 # this returns vectors whose span is the subspace L of C2 in the notation above
 def image_of_del3(TN_Wrapper, C2_face_map):
     W = TN_Wrapper
-    T = W.triangulation
+    T = W.triangulation()
     image = []
     for i in range(T.size()):
         tet = T.tetrahedron(i)
@@ -105,16 +105,16 @@ def get_periph_basis_surfaces(TN_Wrapper):
     surfaces = []
     periph_basis_found = []
     W = TN_Wrapper
-    if W.manifold.num_cusps() == 0:
+    if W.manifold().num_cusps() == 0:
         return []
     else:
-        T = W.triangulation
-        num_cusps = W.manifold.num_cusps()
-        betti = W.betti_number
+        T = W.triangulation()
+        num_cusps = W.manifold().num_cusps()
+        betti = W.betti_number()
         periph_H2_std_vecs = [standard_basis_tup(k,num_cusps) for k in range(num_cusps)]
         for i in range(W.qtons().size()):
-            boundary_slopes = W.boundary_slopes(i)
-            periph_H2 = tuple([boundary_slopes[j][1] for j in range(len(boundary_slopes))])
+            H1bdy_slopes = W.H1bdy_slopes(i)
+            periph_H2 = tuple([H1bdy_slopes[j][1] for j in range(len(H1bdy_slopes))])
             if periph_H2 in periph_H2_std_vecs:
                 if periph_H2 not in periph_basis_found:
                     periph_basis_found.append(periph_H2)

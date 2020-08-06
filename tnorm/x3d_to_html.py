@@ -65,7 +65,7 @@ def make_x3d_html(norm_ball, online=False, directory=None, dual=False):
     else:
         title = 'TNorm Ball'
     text = ''
-    P=norm_ball.polyhedron
+    P=norm_ball.polyhedron()
 
     if P.dim() == 4:
         SP = P.schlegel_projection()
@@ -96,8 +96,8 @@ def make_x3d_html(norm_ball, online=False, directory=None, dual=False):
         if dual:
             label = '{}'.format(i)
         else:
-            frac = '1/{}*'.format(-v.euler_char) if v.euler_char!=-1 else ''
-            label = '{}S_{},{}'.format(frac,v.genus,v.num_boundary_comps)
+            frac = '1/{}*'.format(-v.euler_char()) if v.euler_char()!=-1 else ''
+            label = '{}S_{},{}'.format(frac,v.genus(),v.num_boundary_comps())
         vertices_str += make_x3d_vertex(str_vert_coords,'.045')
         labels_str += make_x3d_text(label,str_label_coords,'.3 .3 .3')
 

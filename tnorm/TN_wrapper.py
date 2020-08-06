@@ -37,9 +37,9 @@ import tnorm.constants
 #preparser(False)
 
 
-class TN_wrapper():
+class TN_wrapper(object):
 	"""
-	A class for working with Thurston Norm on H2(M,\partial M).
+	A class for working with Thurston Norm on H2(M,bdy(M)).
 
 	sage: W = TN_wrapper(SnapPeaTri)
 
@@ -55,58 +55,58 @@ class TN_wrapper():
 	"""
 	def __init__(self, manifold, qtons=None, quiet=False, tracker=False, allows_non_admissible=False, bdy_H1_basis='natural', force_simplicial_homology=False):
 		
-		self.triangulation = None
+		self._triangulation = None
 		if isinstance(manifold,str):
-			self.manifold = snappy.Manifold(manifold)
+			self._manifold = snappy.Manifold(manifold)
 		elif isinstance(manifold, regina.engine.SnapPeaTriangulation):
-			self.manifold = snappy.Manifold(manifold.snapPea())
-			self.triangulation = manifold
+			self._manifold = snappy.Manifold(manifold.snapPea())
+			self._triangulation = manifold
 		elif isinstance(manifold, regina.engine.Triangulation3):
-			self.manifold = snappy.Manifold(manifold.snapPea())
-			self.triangulation = manifold
+			self._manifold = snappy.Manifold(manifold.snapPea())
+			self._triangulation = manifold
 		elif isinstance(manifold, snappy.Manifold):
-			self.manifold = manifold
+			self._manifold = manifold
 		elif isinstance(manifold, snappy.Triangulation):
-			self.manifold = manifold
+			self._manifold = manifold
 
-		for c in self.manifold.cusp_info():
+		for c in self._manifold.cusp_info():
 			if c.is_complete == False:
-				self.manifold = self.manifold.filled_triangulation()
+				self._manifold = self._manifold.filled_triangulation()
 				break
 		
 		self._QUIET = quiet
 		self._force_simplicial_homology = force_simplicial_homology
-		self.num_cusps = self.manifold.num_cusps()
-		if self.num_cusps != 0:
+		self._num_cusps = self._manifold.num_cusps()
+		if self._num_cusps != 0:
 			try: 
-				L = self.manifold.link()
-				self.knows_link_complement = True
+				L = self._manifold.link()
+				self._knows_link_complement = True
 			except ValueError:
-				self.knows_link_complement = False
-			if self.knows_link_complement and bdy_H1_basis == 'natural':
-				self.bdy_H1_basis = 'natural'
+				self._knows_link_complement = False
+			if self._knows_link_complement and bdy_H1_basis == 'natural':
+				self._bdy_H1_basis = 'natural'
 			else:
-				self.manifold.set_peripheral_curves('shortest')
-				self.bdy_H1_basis = 'shortest'
+				self._manifold.set_peripheral_curves('shortest')
+				self._bdy_H1_basis = 'shortest'
 
-			self.triangulation = regina.SnapPeaTriangulation(self.manifold._to_string())
-			self._angle_structure = solve_lin_gluingEq(self.triangulation)
-			self._peripheral_curve_mats = [peripheral_curve_mats(self.manifold, self.triangulation, cusp) for cusp in range(self.triangulation.countCusps())]
-			self.manifold_is_closed = False
+			self._triangulation = regina.SnapPeaTriangulation(self._manifold._to_string())
+			self._angle_structure = solve_lin_gluingEq(self._triangulation)
+			self._peripheral_curve_mats = [peripheral_curve_mats(self._manifold, self._triangulation, cusp) for cusp in range(self._triangulation.countCusps())]
+			self._manifold_is_closed = False
 		else:
-			if self.triangulation == None:
-				self.triangulation = regina.Triangulation3(self.manifold._to_string())
+			if self._triangulation == None:
+				self._triangulation = regina.Triangulation3(self._manifold._to_string())
 				for _ in range(10):
-					self.triangulation.intelligentSimplify()
-			self.manifold_is_closed = True
-			self.bdy_H1_basis = None
-		if not self.triangulation.isOriented():
-			self.triangulation.orient()
+					self._triangulation.intelligentSimplify()
+			self._manifold_is_closed = True
+			self._bdy_H1_basis = None
+		if not self._triangulation.isOriented():
+			self._triangulation.orient()
 		self._qtons = qtons
 		self._tkr = False
-		self.allows_non_admissible = allows_non_admissible
-		self.is_fibered = 'unknown'
-		self.betti_number = self.triangulation.homologyH1().rank()
+		self._allows_non_admissible = allows_non_admissible
+		self._is_fibered = 'unknown'
+		self._betti_number = self._triangulation.homologyH1().rank()
 
 		# qtons memoization caches-----
 		self._euler_char = {}
@@ -120,7 +120,7 @@ class TN_wrapper():
 		self._is_embedded = {}
 		self._num_H1bdy_comps = {}
 
-		if self.manifold.num_cusps() > 0:
+		if self._manifold.num_cusps() > 0:
 			self._boundary_slopes = {}
 			self._map_to_H1bdy = {}
 
@@ -148,15 +148,15 @@ class TN_wrapper():
 			except AttributeError:
 				pass
 
-		if self.betti_number > self.num_cusps:
-			self.has_internal_homology = True
+		if self._betti_number > self._num_cusps:
+			self._has_internal_homology = True
 		else:
-			self.has_internal_homology = False
+			self._has_internal_homology = False
 
 		# if the manifold has internal homology or force_simplicial_homology==True then we need to use simplicial homology.
-		if self.has_internal_homology or self._force_simplicial_homology:
+		if self._has_internal_homology or self._force_simplicial_homology:
 			
-			self.uses_simplicial_homology = True
+			self._uses_simplicial_homology = True
 
 			if not self._QUIET:
 				print('computing simplicial homology...',end='')
@@ -165,15 +165,15 @@ class TN_wrapper():
 				except AttributeError:
 					pass
 
-			self._face_map_to_C2 = get_face_map_to_C2(self.triangulation)
-			self._quad_map_to_C2 = get_quad_map_to_C2(self.triangulation, self._face_map_to_C2)
+			self._face_map_to_C2 = get_face_map_to_C2(self._triangulation)
+			self._quad_map_to_C2 = get_quad_map_to_C2(self._triangulation, self._face_map_to_C2)
 			H2_basis_in_C2, P, qtons_image = H2_as_subspace_of_C2(self, self._face_map_to_C2, self._quad_map_to_C2)
 			self._project_to_im_del3 = P
 			self._qtons_image_in_C2 = {i:qtons_image[i] for i in range(len(qtons_image))}
-			assert len(H2_basis_in_C2) == self.betti_number, self.manifold.name()+', force_simplicial_homology={}'.format(self.force_simplicial_homology)
+			assert len(H2_basis_in_C2) == self._betti_number, self._manifold.name()+', force_simplicial_homology={}'.format(self._force_simplicial_homology)
 				# raise an error if the qtons do not generate H2. This should only happen for a knot in a 
 				# rational homology sphere, with force_simplicial_homology=True.
-			I = Matrix.identity(self.betti_number)
+			I = Matrix.identity(self._betti_number)
 			B = Matrix(H2_basis_in_C2).transpose()
 			A = B.solve_left(I)
 			self._map_H2_to_standard_basis = A
@@ -185,11 +185,46 @@ class TN_wrapper():
 				except AttributeError:
 					pass
 		else:
-			self.uses_simplicial_homology = False
+			self._uses_simplicial_homology = False
 
 	# need to make this work for qtons without index. I.e., a linear combo of vertex normal surfaces.
+	
+	def manifold(self):
+		return self._manifold
+
+	def triangulation(self):
+		return self._triangulation
+
+	def num_cusps(self):
+		return self._num_cusps
+
+	def knows_link_complement(self):
+		return self._knows_link_complement
+
+	def bdy_H1_basis(self):
+		return self._bdy_H1_basis
+
+	def allows_non_admissible(self):
+		return self._allows_non_admissible
+
+	def betti_number(self):
+		return self._betti_number
+
+	def is_fibered(self):
+		return self._is_fibered
+
+	def has_internal_homology(self):
+		return self._has_internal_homology
+
+	def uses_simplicial_homology(self):
+		return self._uses_simplicial_homology
+
+	def manifold_is_closed(self):
+		return self._manifold_is_closed
+
+
 	def _simplicial_map_to_H2(self,qtons):
-		if self.uses_simplicial_homology:
+		if self.uses_simplicial_homology():
 			try:
 				ind = int(qtons)
 			except TypeError:
@@ -205,22 +240,22 @@ class TN_wrapper():
 	def qtons(self):
 		"""
 		Enumerate vertex oriented quad normal surfaces for the ideal triangulation self.triangulation()
-		This is cached in self.qtons, so calls to this function after the initial call (when TN_wrapper() is 
+		This is cached in self._qtons, so calls to this function after the initial call (when TN_wrapper() is 
 		instantiated) will be fast. 
 
 		Returns a regina.NormalSurfaces object.
 		"""
 		if self._qtons == None:
 			if self._tkr:
-				if self.allows_non_admissible:
-					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
+				if self.allows_non_admissible():
+					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
 				else:
-					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
+					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
 			else:
-				if self.allows_non_admissible:
-					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
+				if self.allows_non_admissible():
+					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
 				else:
-					return regina.NormalSurfaces.enumerate(self.triangulation,regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
+					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
 		else:
 			return self._qtons
 
@@ -249,7 +284,7 @@ class TN_wrapper():
 			
 		if not ind in self._euler_char:
 			s = self.qtons().surface(ind)
-			if not self.manifold_is_closed:
+			if not self.manifold_is_closed():
 				ec = euler_char_(s,self._angle_structure)
 			else:
 				ec = regina_to_sage_int(s.eulerChar())
@@ -279,6 +314,7 @@ class TN_wrapper():
 		2
 
 		"""	
+			
 		try:
 			ind = int(qtons)
 			s = self.qtons().surface(ind)
@@ -287,25 +323,28 @@ class TN_wrapper():
 			s = qtons
 
 		if not ind in self._num_boundary_comps:
-			nbc = 0
-			pos, neg = self.boundary_slopes(ind)
-			for slope in pos:
-				nbc += gcd(slope[0],slope[1])
-			for slope in neg:
-				nbc += gcd(slope[0],slope[1])
-			self._num_boundary_comps[ind] = nbc
+			if self.manifold_is_closed():
+				self._num_boundary_comps[ind] = 0
+			else:
+				nbc = 0
+				pos, neg = self.boundary_slopes(ind)
+				for slope in pos:
+					nbc += gcd(slope[0],slope[1])
+				for slope in neg:
+					nbc += gcd(slope[0],slope[1])
+				self._num_boundary_comps[ind] = nbc
 
 		return self._num_boundary_comps[ind]	
 
 	def boundary_slopes(self,qtons):
 		"""
-		Return the positive and negative boundary slopes of the given surface in H1(\partial M), with respect to the basis W.bdy_H1_basis. 
+		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis W.bdy_H1_basis. 
 		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
 
-		sage: W._map_to_H1bdy(3)    # return image in H1(\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W._map_to_H1bdy(3)    # return image in H1(bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
 		[(-1, 0), (0, 1), (-1, 0)]
 		"""
-		if self.manifold_is_closed:
+		if self.manifold_is_closed():
 			return []
 		else:
 			try:
@@ -322,7 +361,7 @@ class TN_wrapper():
 
 	def H1bdy_slopes(self, qtons):
 		
-		if self.manifold_is_closed:
+		if self.manifold_is_closed():
 			return []
 		else:
 			try:
@@ -356,14 +395,14 @@ class TN_wrapper():
 
 	def map_to_H2(self, qtons):
 		"""
-		Return the image of the given surface in H2(M, \partial M). Argument can be a surface (regina quad transversely oriented
+		Return the image of the given surface in H2(M, bdy(M)). Argument can be a surface (regina quad transversely oriented
 		normal surface) or the index of a surface.
 
-		sage: W.mapToH2(3)    # return the image in H2(M,\partial M) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		sage: W.mapToH2(3)    # return the image in H2(M,bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
 		(0,1,0)
 
 		"""
-		if not self.uses_simplicial_homology:
+		if not self.uses_simplicial_homology():
 			try:
 				ind = int(qtons)
 			except TypeError:
@@ -382,7 +421,7 @@ class TN_wrapper():
 			of this vector corresponds to the number of triangles of index i, as indexed by Regina, with orientation positive
 			if the transverse orientation of the surface points toward the tetrahedron triangle(i).front(). 
 		"""
-		if not self.uses_simplicial_homology:
+		if not self.uses_simplicial_homology():
 			return None
 		else:
 			try:
@@ -409,7 +448,7 @@ class TN_wrapper():
 			f = self._over_facet[ind]
 		else:
 			v = self.map_to_H2(ind)
-			f = over_facet_(v,self.norm_ball.polyhedron)
+			f = over_facet_(v,self.norm_ball.polyhedron())
 			self._over_facet[ind] = f
 		if as_string:
 			return None if f==None else '<{}>'.format(' '.join([str(v.index()) for v in f.vertices()]))
@@ -426,7 +465,7 @@ class TN_wrapper():
 
 		if not ind in self._is_norm_minimizing:
 			v = self.map_to_H2(ind)
-			if not self.norm_ball.polyhedron.interior_contains(v):
+			if not self.norm_ball.polyhedron().interior_contains(v):
 				self._is_norm_minimizing[ind] = True
 				return True
 			else:
@@ -454,7 +493,7 @@ class TN_wrapper():
 
 	def map_to_ball(self, qtons):
 		"""
-		Return the image of the given surface in H2(M, \partial M), then divide by Euler characteristic. Argument can be a surface (regina oriented
+		Return the image of the given surface in H2(M, bdy(M)), then divide by Euler characteristic. Argument can be a surface (regina oriented
 		spun normal surface) or the index of a surface.
 
 		"""
@@ -531,19 +570,7 @@ class TN_wrapper():
 	@cached_property
 	def norm_ball(self):
 		"""
-		Return the norm ball as a sage Polyhedron. Some things you can do:
-
-		sage: B=W.norm_ball
-		sage: B.facets(2)        # list the 2-dimensional facets
-		sage: B.facets(0)        # list the 0-dimensional facets (vertices)
-
-		sage: F = B.facets(2)
-		sage: F[0].vertices()   #return vertices of the 0^th facet
-
-		sage: B.plot()          # plot of B. I imagine this only works if B is 1,2, or 3 dimensional.
-
-		The Polyhedron class has a lot of methods, and I have not explored many of them. There is 
-		probably a lot more that would be useful. Use tab completion to explore!
+		Return the Thurston norm ball.
 		"""
 		if not self._QUIET:
 			print('Computing Thurston norm unit ball... ', end='')
@@ -554,54 +581,62 @@ class TN_wrapper():
 		pts_dict, rays_dict = self._norm_ball_points
 
 		### If M is not hyperbolic then rays_dict should be non-empty, and the norm ball should be non-compact. 
-		### The below attempts to compute the non-compact norm ball, but it may be wrong. This is because (it seems) 
-		### some surfaces may not be realized as spun normal surfaces.
+		### The below attempts to compute the non-compact norm ball, but it may be wrong. This is because 
+		### (it seems) some surfaces may not be realized as spun normal surfaces.
+
 		if len(rays_dict) != 0:
+			V=VectorSpace(RR,self.betti_number())
+			ray_span=V.span([V(r) for r in rays_dict])
+			keys = [p for p in pts_dict]
+			for p in keys:
+				if V(p) in ray_span:
+					_ = pts_dict.pop(p)
+
+
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
 			rays = tuple([(rays_dict[tuple(i*vector(v))],i*vector(v)) for v in polyhedron.lines_list() for i in [1,-1]])
-			Rays = [Ray(i,rays[i][0],rays[i][1],self.num_boundary_comps(rays[i][0]), self.euler_char(rays[i][0]), self.boundary_slopes(rays[i][0]), True, self.is_admissible(rays[i][0]),True, self.simplicial_class(rays[i][0])) for i in range(len(rays))]
-			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
-			projected_verts = {}
-			Vertices = []
-			for i,v in vertices:
-				v = vector(v)
-				v_proj, coeffs = orthogonal_proj(v, polyhedron.lines_list())
-				v_proj = tuple(v_proj)
-				boundary_slopes = []
-				num_boundary_comps = 0
-				euler_char = coeffs[0]*self.euler_char(pts_dict[tuple(v)])
-				for j in range(self.manifold.num_cusps()):
-					slope = vector((0,0))
-					slope += vector(self.boundary_slopes(i)[j])*coeffs[0]
-					for k in range(len(polyhedron.lines_list())):
-						slope += vector(self.boundary_slopes(rays_dict[tuple(polyhedron.lines_list()[k])])[j])*coeffs[k+1]
-					boundary_slopes.append(slope)
-					num_boundary_comps += gcd(slope[0],slope[1])
-				if v_proj not in projected_verts:
-					projected_verts[v_proj] = (num_boundary_comps, euler_char, boundary_slopes)
-			polyhedron = Polyhedron(vertices=Matrix(projected_verts.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
-			for i in range(len(polyhedron.vertices_list())):
-				v = tuple(polyhedron.vertices_list()[i])
-				if v in pts_dict:
-					Vertices.append(AdornedVertex(i,pts_dict[v],vector(v),self.num_boundary_comps(pts_dict[v]), self.euler_char(pts_dict[v]), self.boundary_slopes(pts_dict[v]), False, self.is_admissible(pts_dict[v]), True, W.simplicial_class(pts_dict[v])))
-				else:
-					Vertices.append(AdornedVertex(i, None, vector(v), projected_verts[v][0], projected_verts[v][1], projected_verts[v][2],False, None, True,None))
+			Rays = [Ray(i, rays[i][0], rays[i][1], self) for i in range(len(rays))]
+			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list() if not vector(v).is_zero()])
+			Vertices = [NBVertex(i, vertices[i][0], vertices[i][1], self) for i in range(len(vertices))]
+#			projected_verts = {}
+#			Vertices = []
+#			for i,v in vertices:
+#				v = vector(v)
+#				v_proj, coeffs = orthogonal_proj(v, polyhedron.lines_list())
+#				v_proj = tuple(v_proj)
+#				boundary_slopes = []
+#				num_boundary_comps = 0
+#				euler_char = coeffs[0]*self.euler_char(pts_dict[tuple(v)])
+#				for j in range(self.manifold().num_cusps()):
+#					slope = vector((0,0))
+#					slope += vector(self.boundary_slopes(i)[j])*coeffs[0]
+#					for k in range(len(polyhedron().lines_list())):
+#						slope += vector(self.boundary_slopes(rays_dict[tuple(polyhedron.lines_list()[k])])[j])*coeffs[k+1]
+#					boundary_slopes.append(slope)
+#					num_boundary_comps += gcd(slope[0],slope[1])
+#				if v_proj not in projected_verts:
+#					projected_verts[v_proj] = (num_boundary_comps, euler_char, boundary_slopes)
+#			polyhedron = Polyhedron(vertices=Matrix(projected_verts.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
+#			for i in range(len(polyhedron.vertices_list())):
+#				v = tuple(polyhedron.vertices_list()[i])
+#				if v in pts_dict:
+#					Vertices.append(NBVertex(i, pts_dict[v], vector(v), self))
+#				else:
+#					Vertices.append(NBVertex(i, None, vector(v), self, (projected_verts[v][0], projected_verts[v][1], projected_verts[v][2])))
 
 
 
 		else:
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)
 			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list()])
-			if not self.manifold_is_closed:
-				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],self.num_boundary_comps(vertices[i][0]), self.euler_char(vertices[i][0]), self.boundary_slopes(vertices[i][0]), False, self.is_admissible(vertices[i][0]), True, self.simplicial_class(vertices[i][0])) for i in range(len(vertices))]
-			else:
-				Vertices = [AdornedVertex(i,vertices[i][0],vertices[i][1],0, self.euler_char(vertices[i][0]), [], False, self.is_admissible(vertices[i][0]), True, self.simplicial_class(vertices[i][0])) for i in range(len(vertices))]
-
+			
+			Vertices = [NBVertex(i,vertices[i][0],vertices[i][1], self) for i in range(len(vertices))]
 			Rays = []
+
 		ball = TNormBall(Vertices, Rays, polyhedron)
-		if self.num_cusps == 1 and self.betti_number == 1:
-			M = self.manifold.copy()
-			(p,q) = self.manifold.homological_longitude()
+		if self.num_cusps() == 1 and self.betti_number() == 1:
+			M = self.manifold().copy()
+			(p,q) = self.manifold().homological_longitude()
 			elem_divs = [div for div in M.homology().elementary_divisors() if div != 0]
 			M.dehn_fill((p,q))
 			filled_elem_divs = [div for div in M.homology().elementary_divisors() if div != 0]
@@ -610,32 +645,32 @@ class TN_wrapper():
 				b *= div
 			for div in filled_elem_divs:
 				b /= div
-			A = self.manifold.alexander_polynomial()
+			A = self.manifold().alexander_polynomial()
 			A_norm = QQ(A.degree() - 1)
 			try:
-				v=ball.vertices[0]
+				v=ball.vertices()[0]
 
 			except IndexError:
 				pass
 
 			### below needs to be fixed. Currently does not account for virtual fibers.
 			if A_norm <= 0 or not A.is_monic():
-				self.is_fibered = False
-				ball.confirmed = True
+				self._is_fibered = False
+				ball._confirmed = True
 
-			elif len(ball.vertices)==0:
-				self.is_fibered = True
+			elif len(ball.vertices())==0:
+				self._is_fibered = True
 				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-				Vertices = [AdornedVertex(0, None, (-1/A_norm,), b, -A_norm, [(0,1)], False, True, False,None),AdornedVertex(1, None, (1/A_norm,), b, -A_norm, [(0,-1)], False, True, False, None)]
+				Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, [(0,1)])), NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, [(0,-1)]))]
 				ball = TNormBall(Vertices, Rays, polyhedron)
-				ball.confirmed = True
-			elif A_norm == abs(v.euler_char):
-				assert self.num_H1bdy_comps(v.surface_index) == b
-				self.is_fibered = 'unknown'
-				ball.confirmed = True
-			elif A_norm < abs(v.euler_char):
-				M = self.manifold.copy()
-				M.dehn_fill(M.homological_longitude())
+				ball._confirmed = True
+			elif A_norm == abs(v.euler_char()):
+				assert self.num_H1bdy_comps(v.qtons_index()) == b
+				self._is_fibered = 'unknown'
+				ball._confirmed = True
+			elif A_norm < abs(v.euler_char()):
+				#M = self.manifold().copy()
+				#M.dehn_fill(M.homological_longitude())
 				Mf = M.filled_triangulation()
 				T = regina.Triangulation3(Mf._to_string())
 				boo = T.intelligentSimplify()
@@ -644,30 +679,30 @@ class TN_wrapper():
 				if len(non_trivial)>1:
 					non_trivial = [i for i in non_trivial if ns.surface(i).cutAlong().isConnected()]
 				if len(non_trivial) == 0: ## something is wrong!
-					print('Warning: failed to confirm that norm ball is correct (error: len(non_trivial)==0, culprit:M={}.'.format(self.manifold.name()))
-					ball.confirmed = False
+					print('Warning: failed to confirm that norm ball is correct (error: len(non_trivial)==0, culprit:M={}.'.format(self.manifold().name()))
+					ball._confirmed = False
 				elif len(non_trivial) >= 1:
 					genus = min([(2-regina_to_sage_int(ns.surface(i).eulerChar()))/2 for i in non_trivial])
-					if 2*genus - 2 + b == abs(v.euler_char):
-						self.is_fibered = False
-						ball.confirmed = True
+					if 2*genus - 2 + b == abs(v.euler_char()):
+						self._is_fibered = False
+						ball._confirmed = True
 					elif 2*genus - 2 + b == A_norm:
-						multiplier = 1/QQ(abs(v.euler_char)/A_norm)
-						if self.uses_simplicial_homology == True:
-							simplicial_class = multiplier*self.simplicial_class(v.surface_index)
+						multiplier = 1/QQ(abs(v.euler_char())/A_norm)
+						if self.uses_simplicial_homology() == True:
+							simplicial_class = multiplier*self.simplicial_class(v.qtons_index())
 						else:
 							simplicial_class = None
-						self.is_fibered == True
+						self._is_fibered == True
 						polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-						Vertices = [AdornedVertex(0, None, (-1/A_norm,), b, -A_norm, [(0,1)], False, True, False, simplicial_class),AdornedVertex(1, None, (1/A_norm,), b, -A_norm, [(0,-1)], False, True, False, simplicial_class)]
+						Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, [(0,1)])),NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, [(0,-1)]))]
 						ball = TNormBall(Vertices, Rays, polyhedron)
-						ball.confirmed = True
+						ball._confirmed = True
 					else:
-						print('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold.name()))
-						ball.confirmed = False
+						print('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold().name()))
+						ball._confirmed = False
 			else:
 				# if we are here, then something is wrong, and the following will cause an error to be thrown.
-				assert A_norm <= abs(v.euler_char) # (this should never happen)
+				assert A_norm <= abs(v.euler_char()) # (this should never happen)
 		if not self._QUIET:
 			print('Done.')
 			try:
@@ -679,7 +714,7 @@ class TN_wrapper():
 	@cached_property
 	def dual_norm_ball(self):
 		B = self.norm_ball
-		P = B.polyhedron
+		P = B.polyhedron()
 		poly_vertices = []
 		vertices = []
 		for i in range(len(P.faces(P.dim()-1))):
@@ -706,10 +741,9 @@ class TN_wrapper():
 			qtons_info_dict[i]['euler_char'] = self.euler_char(i)
 			qtons_info_dict[i]['boundary_slopes'] = self.boundary_slopes(i)
 			qtons_info_dict[i]['num_boundary_comps'] = self.num_boundary_comps(i)
-			qtons_info_dict[i]['genus'] = (2-self.euler_char(i)-self.num_boundary_comps(i))/2
+			qtons_info_dict[i]['genus'] = self.genus(i)
 			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)
 			qtons_info_dict[i]['over_facet'] = self.over_facet(i,as_string=True)
-			qtons_info_dict[i]['spinning_slopes'] = self.regina_bdy_slopes(i)
 		if not self._QUIET:
 			print('Done.')
 			try:

@@ -26,7 +26,7 @@ def signed_bdy_maps(oriented_spun_surface, TN_wrapper):
     s = oriented_spun_surface
     T = s.triangulation()
 
-    M = TN_wrapper.manifold
+    M = TN_wrapper.manifold()
     periph_mats = TN_wrapper._peripheral_curve_mats
 
     pos_intx_mat, neg_intx_mat =  pos_intersection_mat(), neg_intersection_mat()
@@ -62,7 +62,7 @@ def bdy_slopes_unoriented_(oriented_spun_surface, TN_wrapper, quad_mat=None):
     s = oriented_spun_surface
     T = s.triangulation()
 
-    M = TN_wrapper.manifold
+    M = TN_wrapper.manifold()
     peripheral_curve_matrices = TN_wrapper._peripheral_curve_mats
 
     intersection_mat = intersection_mat().apply_map(abs)

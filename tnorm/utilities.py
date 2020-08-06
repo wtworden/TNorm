@@ -2,7 +2,7 @@
 import contextlib
 import tempfile
 import shutil
-from fractions import gcd as GCD
+from math import gcd as GCD
 
 class cached_property(object):
     """

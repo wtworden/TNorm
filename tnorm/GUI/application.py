@@ -2,7 +2,6 @@
 
 import snappy
 import threading
-import Queue
 import time
 import webbrowser
 import platform
@@ -491,7 +490,7 @@ class TNormApp:
 
 
     def show_faces(self):
-        P = self.ball.polyhedron
+        P = self.ball.polyhedron()
         dim = P.dim()-1
         make_facets_table(self, self.NormBallTab, dim)
 

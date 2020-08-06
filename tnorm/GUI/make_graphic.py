@@ -45,10 +45,10 @@ def _show_polyhedron(tnorm_app, online, tab):
     elif tab == tnorm_app.DualNormBallTab:
         ball = tnorm_app.dual_ball
         dual = True
-    if not ball.is_compact:
-        P = ball.polyhedron_mod_rays
+    if not ball.is_compact():
+        P = ball.polyhedron_mod_rays()
     else:
-        P = ball.polyhedron
+        P = ball.polyhedron()
     if P.dim() in [3,4]:
         ball.plot(viewer='x3d', online=online)
     elif P.dim() in [1,2]:
