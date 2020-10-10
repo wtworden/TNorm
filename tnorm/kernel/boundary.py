@@ -22,14 +22,17 @@ def get_quads(spun_surface,tet,v1,v2):
 
 
 ### this maps an oriented spun normal surface to H_1(bdy M; \ZZ)
-def signed_bdy_maps(oriented_spun_surface, TN_wrapper):
+def signed_bdy_maps(oriented_spun_surface, TN_wrapper, spinning=False):
     s = oriented_spun_surface
     T = s.triangulation()
 
     M = TN_wrapper.manifold()
     periph_mats = TN_wrapper._peripheral_curve_mats
 
-    pos_intx_mat, neg_intx_mat =  pos_intersection_mat(), neg_intersection_mat()
+    pos_intx_mat = pos_intersection_mat()
+    neg_intx_mat =  neg_intersection_mat()
+    if spinning:
+        neg_intx_mat = neg_intx_mat.apply_map(abs)
     pos_slopes = []                   # on a surface affects boundary orientations.
     neg_slopes = []
     quads_mat = oriented_quads_mat(s)
@@ -50,6 +53,13 @@ def signed_bdy_maps(oriented_spun_surface, TN_wrapper):
         pos_slopes.append((-iota_lambda_pos,iota_mu_pos))
         neg_slopes.append((-iota_lambda_neg,iota_mu_neg))
     return pos_slopes, neg_slopes
+
+### this is almost the same as sign_bdy_matrix(), except we take the (entry-wise) absolute value
+### of neg_intersection_mat(). This puts the orientation on quad edges described in Tillmann-- "Normal 
+### surfaces in topologically finite 3-manifolds". The result are boundary slopes with signs indicating
+### spinning direction
+def spinning_bdy_maps(oriented_spun_surface, TN_wrapper):
+    return signed_bdy_maps(oriented_spun_surface, TN_wrapper, True)
 
 ## this map is almost the same as qtons_to_H1bdy(), except the SIGN_MATRIX is replaced by 
 ## SIGN_MATRIX.apply_map(abs). The result is the boundary slope for the embedded, possibly non-orientable,

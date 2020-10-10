@@ -553,7 +553,7 @@ def start():
     root.title('tnorm')
     myapp = TNormApp(root)
     datadir = os.path.dirname(__file__)
-    icon_path = os.path.join(datadir, 'images', 'icon', 'icon.gif')
+    icon_path = os.path.join(datadir, 'images', 'icon', 'icon.png')
     img = tk.PhotoImage(file=icon_path)
     root.tk.call('wm', 'iconphoto', root._w, img)
     root.mainloop()

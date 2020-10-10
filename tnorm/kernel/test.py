@@ -35,6 +35,9 @@ def test(do_tests=[0,1,2]):
                 assert (del2*W.simplicial_class(i)).is_zero(), W.manifold().name()+', force_simplicial=True'
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=True'
 #            assert B.polyhedron.is_compact(), W.manifold.name()+', force_simplicial=True'
+            for i in range(len(B.vertices())):
+                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
+
     
     if 1 in do_tests:
         for name in has_internal_homology:
@@ -62,6 +65,8 @@ def test(do_tests=[0,1,2]):
                 assert (del2*W.simplicial_class(i)).is_zero(), W.manifold().name()+', force_simplicial=True'
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=True'
             assert B.polyhedron().is_compact(), W.manifold().name()+', force_simplicial=True'
+            for i in range(len(B.vertices())):
+                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
     
     if 2 in do_tests:
         for name in links:
@@ -86,11 +91,9 @@ def test(do_tests=[0,1,2]):
                     assert (del2*W_sim.simplicial_class(i)).is_zero(), W_sim.manifold().name()+', force_simplicial=True'
                     assert W_sim.euler_char(i) == 2-2*W_sim.genus(i)-W_sim.num_boundary_comps(i), W_sim.manifold().name()+', force_simplicial=True'
                 assert B_sim.polyhedron().is_compact(), W_sim.manifold().name()+', force_simplicial=True'
-                P_sim = B_sim.polyhedron()
                 P = B.polyhedron()
                 for i in range(len(B.vertices())):
-                    B.vertices()[i].coords() == B_sim.vertices()[i].coords()
-                    B.vertices()[i].euler_char() == B_sim.vertices()[i].euler_char()
-                    B.vertices()[i].genus() == B_sim.vertices()[i].genus()
+                    assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
+
                 
 

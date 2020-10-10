@@ -130,9 +130,6 @@ class NormBall(object):
                         labels+=text3d('{}'.format(v.index()),(v.coords()[0]*1.15,v.coords()[1]*1.15,v.coords()[2]*1.15),color='black',dpi=200,fontsize='large',horizontal_alignment='center')
                 p = P.plot(opacity=opacity, edge_thickness=2)
                 G = p+labels
-                if with_dual:
-                    pd = self.dual().plot(opacity=opacity, edge_thickness=2, color='blue')
-                    G += pd
                 G.show(viewer=viewer,online=online,axes=True)
         else:
             print('Can\'t plot polyhedron of dimension greater than 4.')
@@ -243,6 +240,7 @@ class NBVertex(Vertex):
             self._norm_minimizer_euler = self._TN_wrapper.euler_char(self._qtons_index)
             self._norm_minimizer_bdy_slopes = self._TN_wrapper.boundary_slopes(self._qtons_index)
             self._norm_minimizer_genus = self._TN_wrapper.genus(self._qtons_index)  
+            self._norm_minimizer_is_embedded = self._TN_wrapper.is_embedded(self._qtons_index)
             self._simplicial_class = self._TN_wrapper.simplicial_class(self._qtons_index)
             self._is_admissible = self._TN_wrapper.is_admissible(self._qtons_index)    
         else:
@@ -258,6 +256,7 @@ class NBVertex(Vertex):
             self._norm_minimizer_genus = (2-self._norm_minimizer_euler-self._norm_minimizer_bdy_comps)/2
             self._simplicial_class = None
             self._is_admissible = None
+            self._norm_minimizer_is_embedded = None
 
         self._is_ray = False
         self._factor = QQ(-1/self.euler_char()) if self.euler_char() != 0 else float('inf')
@@ -301,6 +300,9 @@ class NBVertex(Vertex):
             (i.e., it is a primitive integer point lying on the ray over this vertex)
         """
         return self._norm_minimizer_bdy_slopes   
+
+    def is_embedded(self):
+        return self._norm_minimizer_is_embedded
 
     def is_admissible(self):
         return self._is_admissible

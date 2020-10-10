@@ -22,6 +22,7 @@ from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
 from tnorm.kernel.homology import _map_to_H2, _map_to_H1bdy
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
 from tnorm.kernel.regina_helpers import regina_to_sage_int
+from tnorm.kernel.embedded import is_embedded, ends_embedded
 from tnorm.norm_ball import *
 from tnorm.sage_types import *
 from tnorm.utilities import *
@@ -117,11 +118,14 @@ class TN_wrapper(object):
 		self._is_norm_minimizing = {}
 		self._is_admissible = {}
 		self._qtons_image_in_C2 = {}
-		self._is_embedded = {}
 		self._num_H1bdy_comps = {}
+		self._has_mixed_bdy = {}
+		self._is_embedded = {}
+		self._ends_embedded = {}
 
 		if self._manifold.num_cusps() > 0:
 			self._boundary_slopes = {}
+			self._spinning_slopes = {}
 			self._map_to_H1bdy = {}
 
 		if not self._QUIET:		
@@ -274,7 +278,7 @@ class TN_wrapper(object):
 		Argument can be a surface (Regina oriented spun normal surface) or the index of a surface.
 
 		sage: W.euler_char(3)    # return Euler characteristic of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		-1
+		-17
 
 		"""
 		try:
@@ -339,10 +343,12 @@ class TN_wrapper(object):
 	def boundary_slopes(self,qtons):
 		"""
 		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis W.bdy_H1_basis. 
-		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
+		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface. Returns as a tuple of
+		the form (pos_slopes, neg_slopes), where pos_slopes is a list such that pos_slopes[i] is positive boundary slope on cusp i,
+		and similarly for neg_slopes.
 
-		sage: W._map_to_H1bdy(3)    # return image in H1(bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		[(-1, 0), (0, 1), (-1, 0)]
+		sage: W.boundary_slopes(3)    # return positive and negative boudnary of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		([(0, 0), (-3, 1)], [(3, -1), (0, 0)])
 		"""
 		if self.manifold_is_closed():
 			return []
@@ -358,6 +364,78 @@ class TN_wrapper(object):
 				self._boundary_slopes[ind] = pos_bdy, neg_bdy
 			
 			return self._boundary_slopes[ind]
+
+	def is_embedded(self,qtons):
+		"""Return True if the given qtons can be normally isotoped to be embedded.
+		"""
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._is_embedded:
+			s = self.qtons().surface(ind)
+			self._is_embedded[ind] = is_embedded(s,self)
+		
+		return self._is_embedded[ind]
+
+	def ends_embedded(self,qtons):
+		"""Return True if the ends of the given qtons can be normally isotoped to be embedded.
+		"""
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._ends_embedded:
+			s = self.qtons().surface(ind)
+			self._ends_embedded[ind] = ends_embedded(s,self)
+		
+		return self._ends_embedded[ind]		
+
+	def has_mixed_bdy(self, qtons):
+		if self.manifold_is_closed():
+			return False
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._has_mixed_bdy:
+				pos_bdy, neg_bdy = self.boundary_slopes(ind)
+				if Matrix(pos_bdy).norm() == 0 or Matrix(neg_bdy).norm() == 0:
+					self._has_mixed_bdy[ind] = False
+				else:
+					self._has_mixed_bdy[ind] = True
+
+			return self._has_mixed_bdy[ind]
+
+
+	def spinning_slopes(self,qtons):
+		"""
+		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis W.bdy_H1_basis. 
+		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
+
+		sage: W._map_to_H1bdy(3)    # return image in H1(bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		[(-1, 0), (0, 1), (-1, 0)]
+		"""
+		if self.manifold_is_closed():
+			return []
+		else:
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._spinning_slopes:
+				s = self.qtons().surface(ind)
+				pos_bdy, neg_bdy = signed_bdy_maps(s, self, True)
+				self._spinning_slopes[ind] = pos_bdy, neg_bdy
+			
+			return self._spinning_slopes[ind]
+
+
 
 	def H1bdy_slopes(self, qtons):
 		
@@ -562,6 +640,12 @@ class TN_wrapper(object):
 				reps = sorted(reps,key=lambda x: sum(self.simplicial_class(x).apply_map(abs)))
 				points[nzd] = reps[0] # get the index of the rep with minimal L^1 norm
 			else:
+				good_ends = [rep for rep in reps if self.ends_embedded(rep)]
+				if len(good_ends) != 0:
+					reps = good_ends # if possible, choose from reps with embedded ends
+				embedded = [rep for rep in reps if self.is_embedded(rep)]
+				if len(embedded) != 0:
+					reps = embedded # if possible, choose from reps that are embedded
 				reps = sorted(reps,key=lambda x: self.num_boundary_comps(x))
 				points[nzd] = reps[0] # get the index of the rep with the minimal number of bdy components
 
@@ -740,6 +824,7 @@ class TN_wrapper(object):
 			qtons_info_dict[i]['image_in_H2'] = self.map_to_H2(i)
 			qtons_info_dict[i]['euler_char'] = self.euler_char(i)
 			qtons_info_dict[i]['boundary_slopes'] = self.boundary_slopes(i)
+			qtons_info_dict[i]['is_embedded'] = self.is_embedded(i)
 			qtons_info_dict[i]['num_boundary_comps'] = self.num_boundary_comps(i)
 			qtons_info_dict[i]['genus'] = self.genus(i)
 			qtons_info_dict[i]['is_norm_minimizing'] = self.is_norm_minimizing(i)

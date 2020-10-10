@@ -41,6 +41,7 @@ def oriented_quads_mat(oriented_spun_surface):
     return Matrix([[get_oriented_quads(s,i,j,k) for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]] for i in range(T.size())])
 
 
+
 ### Same form as above matrix, but only picks up quads that have a boundary arc isotopic into the given
 ### cusp
 def quad_bdy_mat(oriented_spun_surface, cusp):

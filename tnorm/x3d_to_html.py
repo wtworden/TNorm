@@ -124,7 +124,7 @@ def make_x3d_html(norm_ball, online=False, directory=None, dual=False):
 
 
 
-    body = "<body>\n<x3d width='1000px' height='700px', margin-left='300px'>\n<scene><Background backUrl='[]' bind='false' bottomUrl='[]' crossOrigin='""' description='""' frontUrl='[]' groundAngle='[]' groundColor='(0,0,0)' isActive='false' leftUrl='[]' rightUrl='[]' scaling='[]' skyAngle='[]' skyColor='(0,0,0)' topUrl='[]' transparency='0/1' ></Background>\n{}\n</scene>\n</x3d>\n</body>\n".format(x3d_str+labels_str+vertices_str+axes)
+    body = "<body>\n<x3d width='1000px' height='700px', margin-left='300px'>\n<scene><Background backUrl='[]' bind='false' bottomUrl='[]' crossOrigin='""' description='""' frontUrl='[]' groundAngle='[]' groundColor='(0.2,0.2,0.2)' isActive='false' leftUrl='[]' rightUrl='[]' scaling='[]' skyAngle='[]' skyColor='(0.2,0.2,0.2)' topUrl='[]' transparency='0/1' ></Background>\n{}\n</scene>\n</x3d>\n</body>\n".format(x3d_str+labels_str+vertices_str+axes)
 
     page = "<html>\n{}{}</html>".format(head,body)
 
