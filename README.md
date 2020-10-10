@@ -14,7 +14,7 @@ To get started:
 
 	sage: W=tnorm.load('m130')
 	sage: B=W.norm_ball
-	sage: B.vertices
+	sage: B.vertices()
 	[Vertex 0: represented by (1/2)* S_1,2 at (-1), mapped from surface with index 10,
 	Vertex 1: represented by (1/2)* S_1,2 at (1), mapped from surface with index 0]
 	sage: 
@@ -25,7 +25,7 @@ Support for hyperbolic 3-manifolds that are not multi-component links in rationa
 
 TO DO:
 
-* add feature: determine fiberedness of a hyp 3-mfld (and hence knot genus of a knot)
+* add feature: determine fiberedness of a hyp 3-mfld
 * remove Sage dependence.
 * better documentation throughout.
 * some optimization for speed is probably still possible.
@@ -46,7 +46,7 @@ More detailed install instructions for MacOS:
 		 
 		 $ xattr -rd com.apple.quarantine /Applications/SageMath
 		
-	(note: the part in red is the path to SageMath. This may be different if you put it (for example) in the applications folder at the user lever, i.e., /Users/your_username/Applications/SageMath)
+	(note: for the above, "/Applications/" is the path to SageMath. This may be different if you put it (for example) in the applications folder at the user lever, i.e., /Users/your_username/Applications/SageMath)
 
 	2c. Open System Preferences —> Security and Privacy —> Privacy, then scroll on the left side down to "Full Disk Access" and select it. On the right side (after clicking the lock and entering password, if needed), click “+” button, then navigate to Applications/SageMath/ and select sage.
 
