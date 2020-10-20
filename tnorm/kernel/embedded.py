@@ -272,7 +272,7 @@ def is_embedded(qtons,TN_wrapper):
     T = W.triangulation()
 
     if not W.manifold_is_closed():
-        pos_bdy, neg_bdy = W.boundary_slopes(S)
+        pos_bdy, neg_bdy = W.boundary_slopes(S).values()
         if not ends_embedded(S,W):
             return False
 

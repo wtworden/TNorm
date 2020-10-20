@@ -241,6 +241,7 @@ class NBVertex(Vertex):
             self._norm_minimizer_bdy_slopes = self._TN_wrapper.boundary_slopes(self._qtons_index)
             self._norm_minimizer_genus = self._TN_wrapper.genus(self._qtons_index)  
             self._norm_minimizer_is_embedded = self._TN_wrapper.is_embedded(self._qtons_index)
+            self._norm_minimizer_ends_embedded = self._TN_wrapper.ends_embedded(self._qtons_index)
             self._simplicial_class = self._TN_wrapper.simplicial_class(self._qtons_index)
             self._is_admissible = self._TN_wrapper.is_admissible(self._qtons_index)    
         else:
@@ -257,6 +258,7 @@ class NBVertex(Vertex):
             self._simplicial_class = None
             self._is_admissible = None
             self._norm_minimizer_is_embedded = None
+            self._norm_minimizer_ends_embedded = None
 
         self._is_ray = False
         self._factor = QQ(-1/self.euler_char()) if self.euler_char() != 0 else float('inf')
@@ -304,13 +306,27 @@ class NBVertex(Vertex):
     def is_embedded(self):
         return self._norm_minimizer_is_embedded
 
+    def ends_embedded(self):
+        return self._norm_minimizer_ends_embedded
+
     def is_admissible(self):
         return self._is_admissible
     
     def __str__(self):
         frac = '' if self._factor == 1 else self._factor
         vert_or_ray = 'Ray' if self._is_ray else 'Vertex' 
-        return '{} {}: represented by ({})*S_{},{} at {}, mapped from surface with index {}'.format(vert_or_ray, self.index(), frac, self.genus(), self.num_boundary_comps(), self.coords(), self.qtons_index())
+        if self.qtons_index() == None:
+            mapped_from = 'not represented by any qtons'
+        else:
+            if self.is_embedded():
+                mapped_from = 'mapped from embedded qtons with index {}'.format(self.qtons_index())
+            else:
+                mapped_from = 'mapped from immersed qtons with index {}'.format(self.qtons_index())
+
+        if self._factor == 1:
+            return '{} {}: represented by S_{},{} at {}, {}'.format(vert_or_ray, self.index(), self.genus(), self.num_boundary_comps(), self.coords(), mapped_from)
+        else:
+            return '{} {}: represented by ({})*S_{},{} at {}, {}'.format(vert_or_ray, self.index(), frac, self.genus(), self.num_boundary_comps(), self.coords(), mapped_from)
 
     def __repr__(self):
         return self.__str__()

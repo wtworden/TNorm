@@ -9,7 +9,7 @@ from tnorm.kernel.boundary import signed_bdy_maps
 
 def _map_to_H1bdy(oriented_spun_surface, TN_wrapper):
     s = oriented_spun_surface
-    pos_slopes, neg_slopes = TN_wrapper.boundary_slopes(s)
+    pos_slopes, neg_slopes = TN_wrapper.boundary_slopes(s).values()
 
     slopes = []
     for i in range(len(pos_slopes)):

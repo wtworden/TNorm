@@ -331,7 +331,7 @@ class TN_wrapper(object):
 				self._num_boundary_comps[ind] = 0
 			else:
 				nbc = 0
-				pos, neg = self.boundary_slopes(ind)
+				pos, neg = self.boundary_slopes(ind).values()
 				for slope in pos:
 					nbc += gcd(slope[0],slope[1])
 				for slope in neg:
@@ -361,7 +361,7 @@ class TN_wrapper(object):
 			if not ind in self._boundary_slopes:
 				s = self.qtons().surface(ind)
 				pos_bdy, neg_bdy = signed_bdy_maps(s, self)
-				self._boundary_slopes[ind] = pos_bdy, neg_bdy
+				self._boundary_slopes[ind] = {'outward':pos_bdy, 'inward':neg_bdy}
 			
 			return self._boundary_slopes[ind]
 
@@ -403,7 +403,7 @@ class TN_wrapper(object):
 				ind = int(qtons.name())
 	
 			if not ind in self._has_mixed_bdy:
-				pos_bdy, neg_bdy = self.boundary_slopes(ind)
+				pos_bdy, neg_bdy = self.boundary_slopes(ind).values()
 				if Matrix(pos_bdy).norm() == 0 or Matrix(neg_bdy).norm() == 0:
 					self._has_mixed_bdy[ind] = False
 				else:

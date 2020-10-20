@@ -42,5 +42,5 @@ setuptools.setup(
  )
 
 
-## python setup.py sdist bdist_wheel --universal
+## sage -python setup.py sdist bdist_wheel --universal
 ## twine upload dist/*
