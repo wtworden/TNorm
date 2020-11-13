@@ -75,9 +75,9 @@ def make_dnb_vertices_table(tnorm_app, frame):
             vert_list = [v.index() for v in f.vertices()]
         verts = {i:B.vertices()[i] for i in vert_list}
         v0 = vert_list[0]
-        treedata.append((j,j,v0, verts[v0].qtons_index(), verts[v0].coords(), 'S_{},{}'.format(verts[v0].genus(), verts[v0].num_boundary_comps()), verts[v0].euler_char(), str(verts[v0].boundary_slopes())['outward'], str(verts[v0].boundary_slopes())['inward']))
+        treedata.append((j,j,v0, verts[v0].qtons_index(), verts[v0].coords(), 'S_{},{}'.format(verts[v0].genus(), verts[v0].num_boundary_comps()), verts[v0].euler_char(), str(verts[v0].boundary_slopes()['outward']), str(verts[v0].boundary_slopes()['inward'])))
         for i in vert_list[1:]:
-            treedata.append(('','',i, verts[i].qtons_index(), verts[i].coords(), 'S_{},{}'.format(verts[i].genus(), verts[i].num_boundary_comps()), verts[i].euler_char(), str(verts[i].boundary_slopes())['outward'], str(verts[v0].boundary_slopes())['inward']))
+            treedata.append(('','',i, verts[i].qtons_index(), verts[i].coords(), 'S_{},{}'.format(verts[i].genus(), verts[i].num_boundary_comps()), verts[i].euler_char(), str(verts[i].boundary_slopes()['outward']), str(verts[v0].boundary_slopes()['inward'])))
         treedata.append(tuple('' for i in range(width)))
     make_treeview_table(frame, treedata, column_names)
     tnorm_app.stop_spin()

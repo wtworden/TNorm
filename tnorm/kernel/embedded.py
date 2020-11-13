@@ -122,21 +122,22 @@ def abstract_nbhds(spun_normal_surface):
 
             align = alignment(perm)
 
-            # arranged quads is a vector of length width, whose components are 1 for a quad, and 0 for a triangle.
-            # e.g., vector [0,1,1,0] means in the tet at ind in cyclic ordering, top layer is a triangle, next down is
-            # a quad, next is a quad, next is a triangle (as we go along the edge from vertex 1 to vertex 0)
+            # arranged quads is a vector of length width, whose components are in range(counts[ind]) for a quad, and None for a triangle.
+            # e.g., vector [None,0,1,None] means in the tet at ind in cyclic ordering, top layer is a triangle, next down is
+            # the 0th quad, next is 1st quad, next is a triangle (as we go along the edge from vertex 1 to vertex 0)
             arranged_quads = quad_range(counts[ind],align) + [None]*(width-counts[ind])
 
             # where in the vertical ordering of the surface components are the first and last quad.
             first_quad, last_quad = 0,counts[ind]-1
 
-            abstract_nbhd.append((tet,slope,align,arranged_quads))
+            abstract_nbhd.append((tet,slope,align,arranged_quads,perm))
 
                 
             # now continue, in the cyclic ordering, until we go all the way around the edge.
             while len(abstract_nbhd) < L:
                 prev_slope = slope
-                prev_count = counts[ind]
+                if counts[ind] != 0:
+                    prev_count = counts[ind]
                 ind = (ind + 1) % L
 
                 if counts[ind] > 0:
@@ -160,15 +161,27 @@ def abstract_nbhds(spun_normal_surface):
                     elif prev_slope == -1 and slope == -1:
                         arranged_quads = pad_with_None([None]*(first_quad + counts[ind]) + quad_range(counts[ind],align), width)
                     first_quad, last_quad = first_nonNone(arranged_quads), last_nonNone(arranged_quads)
-                abstract_nbhd.append((tet,slope,align,arranged_quads))
+                abstract_nbhd.append((tet,slope,align,arranged_quads,perm))
 
         N = abstract_nbhd
         tets = [N[i][0] for i in range(len(N))]
+        perms = [N[i][4] for i in range(len(N))]
         slopes =  [N[i][1] for i in range(len(N))]
         align = [N[i][2] for i in range(len(N))]
         components = [[N[i][3][j] for i in range(len(N))] for j in range(width)]
+
+        # check to make sure in each component the quads alternate between positive and negative slopes. If
+        # they don't then there is a problem, as in that case matching equations would not hold.
+        for comp in components:
+            total_sign=0
+            for i in range(len(comp)):
+                if comp[i] != None:
+                    total_sign += slopes[i]
+                    assert total_sign in [-1,0,1], 'something is wrong---please let the developer know about this!'
+            assert total_sign == 0, 'something is wrong---please let the developer know about this!'
+
             
-        abst_nbhds[edge.index()] = {'tets':tets,'slopes':slopes,'align':align,'components':components}
+        abst_nbhds[edge.index()] = {'perms':perms,'tets':tets,'slopes':slopes,'align':align,'components':components}
 
     return abst_nbhds
 

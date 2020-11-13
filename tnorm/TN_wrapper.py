@@ -745,7 +745,7 @@ class TN_wrapper(object):
 			elif len(ball.vertices())==0:
 				self._is_fibered = True
 				polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-				Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, [(0,1)])), NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, [(0,-1)]))]
+				Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, {'outward':[(0,1)],'inward':[(0,0)]})), NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, {'outward':[(0,-1)],'inward':[(0,0)]}))]
 				ball = TNormBall(Vertices, Rays, polyhedron)
 				ball._confirmed = True
 			elif A_norm == abs(v.euler_char()):
@@ -778,7 +778,7 @@ class TN_wrapper(object):
 							simplicial_class = None
 						self._is_fibered == True
 						polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-						Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, [(0,1)])),NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, [(0,-1)]))]
+						Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, {'outward':[(0,1)],'inward':[(0,0)]})),NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, {'outward':[(0,-1)],'inward':[(0,0)]}))]
 						ball = TNormBall(Vertices, Rays, polyhedron)
 						ball._confirmed = True
 					else:

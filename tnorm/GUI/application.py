@@ -117,9 +117,12 @@ class TNormApp:
 
         self.ManifoldLabel = tk.Label(self.InputBoxFrame, text='Manifold:', bg=BG_COLOR)
         self.ManifoldLabel.grid(row=0,column=0,sticky='w') 
-        self.ManifoldEntry = tk.Entry(self.InputBoxFrame, width=14) 
+        self.ManifoldEntry = tk.Entry(self.InputBoxFrame, width=10) 
         self.ManifoldEntry.bind("<Return>", self.load_on_enter)
         self.ManifoldEntry.grid(row=1, column=0)
+
+        self.LoadButton = ttk.Button(self.InputBoxFrame, text="Load", command=self.load, padding=-8)
+        self.LoadButton.grid(row=1,column=1)
 
         # control frame: load frame: load options frame ----------------------
 
@@ -131,26 +134,20 @@ class TNormApp:
         self.AllowsAdmissible.pack(side=TOP)
 
         self.BasisOption = tk.Frame(self.LoadOptionsFrame, bg=BG_COLOR)
-        self.BasisOption.pack(side=TOP)
+        self.BasisOption.pack(side=TOP, anchor=NW)
 
-        self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='H1(bdy) basis:')
+        self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='Peripheral curves:')
         self.BasisLabel.grid(row=0,column=0,sticky='nw')
 
         self.bdy_H1_basis_var = StringVar(None,'natural')
-        self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='natural', variable=self.bdy_H1_basis_var, value='natural')
-        self.NaturalRadio.grid(row=1, column=1, sticky='w')
+        self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='canonical (if link)', variable=self.bdy_H1_basis_var, value='natural')
+        self.NaturalRadio.grid(row=1, column=0, sticky='w', padx=10)
 
         self.ShortestRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='shortest', variable=self.bdy_H1_basis_var, value='shortest')
-        self.ShortestRadio.grid(row=0, column=1, sticky='w')
+        self.ShortestRadio.grid(row=2, column=0, sticky='w', padx=10)
         self.bdy_H1_basis_var.set('natural')
 
-        # control frame: load frame: load button -----------------------------
 
-        self.LoadButtonFrame = tk.Frame(self.LoadFrame, bg=BG_COLOR)
-        self.LoadButtonFrame.pack(side=TOP,fill=X)
-
-        self.LoadButton = ttk.Button(self.LoadButtonFrame, text="Load", command=self.load)
-        self.LoadButton.pack(side=RIGHT)
 
 
         # control frame: buttons frame -------------------------------------
@@ -233,16 +230,16 @@ class TNormApp:
 
         # main frame: output frame: notebook frame --------------------
 
-        self.NotebookFrame = tk.Frame(self.OutputFrame, bg=BG_COLOR, borderwidth=0)
+        self.NotebookFrame = tk.Frame(self.OutputFrame, bg=BG_COLOR, pady=4)
         self.NotebookFrame.pack(side=TOP, expand=YES, fill=BOTH)  ###
 
         self.Notebook = Notebook = ttk.Notebook(self.NotebookFrame, padding=[0,0,7,0])
 
-        self.SummaryTab = tk.Frame(self.NotebookFrame)
-        self.NormBallTab = tk.Frame(self.NotebookFrame)
-        self.DualNormBallTab = tk.Frame(self.NotebookFrame)
-        self.QtonsTab = tk.Frame(self.NotebookFrame)
-        self.HelpTab = tk.Frame(self.NotebookFrame, background="#DADADA")
+        self.SummaryTab = tk.Frame(self.NotebookFrame, bd=1, background='#DADADA')
+        self.NormBallTab = tk.Frame(self.NotebookFrame, bd=1, background='#DADADA')
+        self.DualNormBallTab = tk.Frame(self.NotebookFrame, bd=1, background='#DADADA')
+        self.QtonsTab = tk.Frame(self.NotebookFrame, bd=1, background='#DADADA')
+        self.HelpTab = tk.Frame(self.NotebookFrame, bd=1, background='#DADADA')
         Notebook.add(self.SummaryTab, text='Summary', sticky='nsew', padding=[0,0,0,0], state='disabled')
         Notebook.add(self.NormBallTab, text='Norm ball', sticky='nsew', padding=[0,0,0,0], state='disabled')
         Notebook.add(self.DualNormBallTab, text='Dual norm ball', sticky='nsew', padding=[0,0,0,0], state='disabled')
@@ -290,8 +287,10 @@ class TNormApp:
         self.dual_ball = None
 
         s = ttk.Style()
+        s.configure("Treeview.Heading", relief='flat')
+
         if platform.system() == 'Darwin':
-            s.configure('TNotebook.Tab', padding=(20, 8, 20, 0))
+            s.theme_settings("default", {"TNotebook.Tab": {"configure": {"padding": [30, 30]}}})
         s.map("TButton",
             fieldbackground=[('disabled', '#F0F0F0')], foreground=[('disabled', '#909090')])
         s.map("TNotebook.Tab",
@@ -458,7 +457,7 @@ class TNormApp:
         datadir = os.path.dirname(__file__)
         path = os.path.join(datadir,'data','welcome.txt')
         with open(path, 'r') as file:
-            self.welcome = tk.Text(self.HelpTab, wrap='none', bg="#DADADA", fg="#444444", height=30, width=100, borderwidth=-2, padx=-1, pady=-1, insertwidth=0)
+            self.welcome = tk.Text(self.HelpTab, wrap='none', bg="#DADADA", fg="#444444", height=34, width=103, borderwidth=-2, padx=-1, pady=-1, insertwidth=0)
             self.welcome.grid(row=0, column=0, sticky='nswe')
             for line in file.readlines():
                 self.welcome.insert(tk.END, line)

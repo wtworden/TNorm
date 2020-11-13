@@ -15,9 +15,9 @@ source_directory = os.path.join(this_directory, 'tnorm')
 exec(open(os.path.join(source_directory, 'version.py')).read())  # Load in the variable __version__.
 
 if float(sage_version) >= 9:
-    dependencies = ['queue','networkx>=2.4', 'snappy>=2.7', 'sageRegina>=5.1.9']
+    dependencies = ['networkx>=2.4', 'snappy>=2.7', 'sageRegina>=5.1.9']
 else:
-    dependencies = ['queue','snappy','sageRegina==5.1.5']
+    dependencies = ['snappy','sageRegina==5.1.5']
 
 setuptools.setup(
     name='tnorm',  
