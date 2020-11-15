@@ -1,7 +1,7 @@
 
-from tnorm.sage_types import *
+from tnorm.utilities.sage_types import *
 #from sympy import Matrix as Matrix
-from tnorm.kernel.regina_helpers import get_oriented_quads, in_cusp
+from tnorm.utilities.regina_helpers import get_oriented_quads, get_quads, in_cusp
 
 
 ### for given cusp, return the matrix that gives intersection data for longitude and meridian.
@@ -19,18 +19,21 @@ from tnorm.kernel.regina_helpers import get_oriented_quads, in_cusp
 ###               .   |                       .                         |
 ###               tk  |_                                               _|
 
-def peripheral_curve_mats(M,T,cusp):
-    cusps = T.countCusps()
-    tets = T.size()
-    try:
-        # for newer versions of SnapPy
-        mat = M._get_cusp_indices_and_peripheral_curve_data()[1]
-    except AttributeError:
-        # for older versions of SnapPy
-        mat = M._get_peripheral_curve_data()
-    mat_l=Matrix([[mat[i][j]*int(in_cusp(T,i//4,j//4,cusp)) for j in range(16)] for i in range(2,4*tets,4)])
-    mat_m=Matrix([[mat[i][j]*int(in_cusp(T,i//4,j//4,cusp)) for j in range(16)] for i in range(0,4*tets,4)])
-    return (mat_l,mat_m)
+def peripheral_curve_mats(M,T):
+    mats = []
+    for cusp in range(T.countCusps()):
+        tets = T.size()
+        try:
+            # for newer versions of SnapPy
+            mat = M._get_cusp_indices_and_peripheral_curve_data()[1]
+        except AttributeError:
+            # for older versions of SnapPy
+            mat = M._get_peripheral_curve_data()
+        mat_l=Matrix([[mat[i][j]*int(in_cusp(T,i//4,j//4,cusp)) for j in range(16)] for i in range(2,4*tets,4)])
+        mat_m=Matrix([[mat[i][j]*int(in_cusp(T,i//4,j//4,cusp)) for j in range(16)] for i in range(0,4*tets,4)])
+        mats.append((mat_l,mat_m))
+    return mats
+
 
 
 ### Quad coordinate of the surface as a Matrix. Row i corresponds to tetrahedron i, and each row has
@@ -39,6 +42,14 @@ def oriented_quads_mat(oriented_spun_surface):
     s = oriented_spun_surface
     T = s.triangulation()
     return Matrix([[get_oriented_quads(s,i,j,k) for (j,k) in [(0,1),(2,3),(0,2),(1,3),(0,3),(1,2)]] for i in range(T.size())])
+
+
+### Quad coordinate of the surface as a Matrix. Row i corresponds to tetrahedron i, and each row has
+### three entries corresponding to the three unoriented quad types: (0,1), (0,2), (0,3), in that order.
+def quads_mat(spun_surface):
+    s = spun_surface
+    T = s.triangulation()
+    return Matrix([[get_quads(s,i,j,k) for (j,k) in [(0,1),(0,2),(0,3),]] for i in range(T.size())])
 
 
 

@@ -1,9 +1,8 @@
 #from sympy import Rational as QQ
-from tnorm.sage_types import *
+from tnorm.utilities.sage_types import *
 
-import tnorm.constants
 from tnorm.kernel.matrices import oriented_quads_mat, dot_product
-from tnorm.kernel.regina_helpers import get_oriented_quads
+from tnorm.utilities.regina_helpers import get_oriented_quads
 from tnorm.kernel.boundary import signed_bdy_maps
 
 

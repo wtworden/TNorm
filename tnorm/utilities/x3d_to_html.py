@@ -3,7 +3,7 @@ import os
 import tempfile
 import shutil
 
-from tnorm.sage_types import *
+from .sage_types import *
 
 
 def fix_x3d_str(x3d_str):

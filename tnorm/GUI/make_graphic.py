@@ -2,7 +2,7 @@ from __future__ import print_function
 import tnorm
 
 import tkinter as tk
-from tnorm.utilities import make_temp_directory
+from tnorm.utilities.utilities import make_temp_directory
 import os
 
 from tkinter import ttk

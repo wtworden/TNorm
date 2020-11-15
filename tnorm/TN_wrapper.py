@@ -18,16 +18,15 @@ import itertools
 
 from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2, qtons_image_in_C2
 from tnorm.kernel.boundary import bdy_slopes_unoriented_, signed_bdy_maps
-from tnorm.kernel.euler import solve_lin_gluingEq, euler_char_
+from tnorm.kernel.euler import solve_lin_gluing_eq, euler_char_
 from tnorm.kernel.homology import _map_to_H2, _map_to_H1bdy
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
-from tnorm.kernel.regina_helpers import regina_to_sage_int
+from tnorm.utilities.regina_helpers import regina_to_sage_int
 from tnorm.kernel.embedded import is_embedded, ends_embedded
 from tnorm.norm_ball import *
-from tnorm.sage_types import *
-from tnorm.utilities import *
-from tnorm.x3d_to_html import *
-import tnorm.constants
+from tnorm.utilities.sage_types import *
+from tnorm.utilities.utilities import *
+from tnorm.utilities.x3d_to_html import *
 
 
 
@@ -91,8 +90,8 @@ class TN_wrapper(object):
 				self._bdy_H1_basis = 'shortest'
 
 			self._triangulation = regina.SnapPeaTriangulation(self._manifold._to_string())
-			self._angle_structure = solve_lin_gluingEq(self._triangulation)
-			self._peripheral_curve_mats = [peripheral_curve_mats(self._manifold, self._triangulation, cusp) for cusp in range(self._triangulation.countCusps())]
+			self._angle_structure = solve_lin_gluing_eq(self._triangulation)
+			self._peripheral_curve_mats = peripheral_curve_mats(self._manifold, self._triangulation)
 			self._manifold_is_closed = False
 		else:
 			if self._triangulation == None:
@@ -360,7 +359,7 @@ class TN_wrapper(object):
 	
 			if not ind in self._boundary_slopes:
 				s = self.qtons().surface(ind)
-				pos_bdy, neg_bdy = signed_bdy_maps(s, self)
+				pos_bdy, neg_bdy = signed_bdy_maps(s, self._peripheral_curve_mats)
 				self._boundary_slopes[ind] = {'outward':pos_bdy, 'inward':neg_bdy}
 			
 			return self._boundary_slopes[ind]
@@ -430,7 +429,7 @@ class TN_wrapper(object):
 	
 			if not ind in self._spinning_slopes:
 				s = self.qtons().surface(ind)
-				pos_bdy, neg_bdy = signed_bdy_maps(s, self, True)
+				pos_bdy, neg_bdy = signed_bdy_maps(s, self._peripheral_curve_mats, True)
 				self._spinning_slopes[ind] = pos_bdy, neg_bdy
 			
 			return self._spinning_slopes[ind]

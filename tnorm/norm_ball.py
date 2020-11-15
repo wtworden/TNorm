@@ -3,10 +3,10 @@ from __future__ import print_function
 import webbrowser
 import time
 
-from tnorm.x3d_to_html import make_x3d_html
-from tnorm.sage_types import *
-from tnorm.hasse import get_hasse
-from tnorm.utilities import *
+from tnorm.utilities.x3d_to_html import make_x3d_html
+from tnorm.utilities.sage_types import *
+from tnorm.utilities.hasse import get_hasse
+from tnorm.utilities.utilities import *
 
 
 class NormBall(object):

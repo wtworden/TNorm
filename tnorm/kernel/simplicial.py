@@ -1,5 +1,5 @@
-from tnorm.sage_types import *
-from tnorm.kernel.regina_helpers import regina_to_sage_int
+from tnorm.utilities.sage_types import *
+from tnorm.utilities.regina_helpers import regina_to_sage_int
 
 """
 Let t be the number of tetrahedra for a triangulation T of M, and let v be the number of vertices (if M is cusped this is the

@@ -5,7 +5,7 @@
 #import imp
 #regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
-from tnorm.sage_types import *
+from .sage_types import *
 
 
 
@@ -46,3 +46,12 @@ def get_oriented_quads(oriented_spun_surface,tet,v1,v2):
     else:
         return regina_to_sage_int(s.orientedQuads(tet,int(1),False))
     return "invalid input"
+
+def get_quads(spun_surface,tet,v1,v2):
+    assert v1 < v2
+    assert v1 == 0
+    s = spun_surface
+    tet = int(tet)
+    v2 = int(v2)
+    return regina_to_sage_int(s.quads(tet,v2-int(1)))
+

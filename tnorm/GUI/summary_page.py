@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import tnorm.constants
 import tkinter as tk
 
 from tkinter import ttk

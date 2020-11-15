@@ -24,6 +24,8 @@ def test(do_tests=[0,1,2]):
             for i in range(W.qtons().size()):
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=False'
 #            assert B.polyhedron.is_compact(), W.manifold.name()+', force_simplicial=False'
+            for i in range(len(B.vertices())):
+                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
         
             W = tnorm.load(name, quiet=True, force_simplicial_homology=True)
             B = W.norm_ball
@@ -35,8 +37,6 @@ def test(do_tests=[0,1,2]):
                 assert (del2*W.simplicial_class(i)).is_zero(), W.manifold().name()+', force_simplicial=True'
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=True'
 #            assert B.polyhedron.is_compact(), W.manifold.name()+', force_simplicial=True'
-            for i in range(len(B.vertices())):
-                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
 
     
     if 1 in do_tests:
@@ -53,7 +53,9 @@ def test(do_tests=[0,1,2]):
                 assert (del2*W.simplicial_class(i)).is_zero(), W.manifold().name()+', force_simplicial=False'
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=False'
             assert B.polyhedron().is_compact(), W.manifold().name()+', force_simplicial=False'
-        
+            for i in range(len(B.vertices())):
+                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=True'
+            
             W = tnorm.load(name, quiet=True, force_simplicial_homology=True)
             B = W.norm_ball
             assert B.polyhedron().dim() == W.triangulation().homologyH1().rank(), W.manifold().name()+', force_simplicial=True'
@@ -65,9 +67,7 @@ def test(do_tests=[0,1,2]):
                 assert (del2*W.simplicial_class(i)).is_zero(), W.manifold().name()+', force_simplicial=True'
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=True'
             assert B.polyhedron().is_compact(), W.manifold().name()+', force_simplicial=True'
-            for i in range(len(B.vertices())):
-                assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
-    
+
     if 2 in do_tests:
         for name in links:
             print(name)
@@ -78,6 +78,9 @@ def test(do_tests=[0,1,2]):
             for i in range(W.qtons().size()):
                 assert W.euler_char(i) == 2-2*W.genus(i)-W.num_boundary_comps(i), W.manifold().name()+', force_simplicial=False'
             assert B.polyhedron().is_compact(), W.manifold().name()+', force_simplicial=False'
+            for i in range(len(B.vertices())):
+                if B.vertices()[i].qtons_index != None:
+                    assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
         
             if W.manifold().num_cusps()>1:
                 W_sim = tnorm.load(name, quiet=True, force_simplicial_homology=True)
@@ -92,8 +95,6 @@ def test(do_tests=[0,1,2]):
                     assert W_sim.euler_char(i) == 2-2*W_sim.genus(i)-W_sim.num_boundary_comps(i), W_sim.manifold().name()+', force_simplicial=True'
                 assert B_sim.polyhedron().is_compact(), W_sim.manifold().name()+', force_simplicial=True'
                 P = B.polyhedron()
-                for i in range(len(B.vertices())):
-                    assert W.is_embedded(B.vertices()[i].qtons_index()) == True, W.manifold().name()+', force_simplicial=False'
 
                 
 

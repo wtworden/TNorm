@@ -9,10 +9,10 @@ import platform
 
 from tnorm.GUI.make_graphic import make_hasse, _show_polyhedron
 from tnorm.GUI.make_table import make_qtons_table, make_all_vertices_table, make_facets_table, make_dnb_vertices_table
-from tnorm.utilities import *
+from tnorm.utilities.utilities import *
 from tnorm.TN_wrapper import TN_wrapper
 from tnorm.GUI.console import ConsoleText
-from tnorm.hasse import get_hasse
+from tnorm.utilities.hasse import get_hasse
 from tnorm.GUI.canvas_image import CanvasImage
 from tnorm.GUI.summary_page import generate_summary, generate_nb_overview, generate_dnb_overview
 # background="..." doesn't work...

@@ -1,7 +1,7 @@
 #from sympy import Matrix as Matrix
 
-from tnorm.sage_types import *
-from tnorm.kernel.regina_helpers import regina_to_sage_int, regina_to_sage_mat
+from tnorm.utilities.sage_types import *
+from tnorm.utilities.regina_helpers import regina_to_sage_int, regina_to_sage_mat
 
 
 ### compute the euler characteristic. If no angle structure is given, computes
@@ -10,7 +10,7 @@ from tnorm.kernel.regina_helpers import regina_to_sage_int, regina_to_sage_mat
 def euler_char_(spun_surface,angle_struct_matrix=None):
     T=spun_surface.triangulation()
     if angle_struct_matrix==None:
-        angles = solve_lin_gluingEq(T)
+        angles = solve_lin_gluing_eq(T)
     else:
         angles = angle_struct_matrix
     tets = T.size()
@@ -25,7 +25,7 @@ def euler_char_(spun_surface,angle_struct_matrix=None):
 
 ### solve the linear gluing equations, including the linear part of the holonomy
 ### equations for meridians and longitudes. Returns a sage Matrix.
-def solve_lin_gluingEq(T):
+def solve_lin_gluing_eq(T):
     GE = regina_to_sage_mat(T.gluingEquations())
     for i in range(T.size()):
         # append equations log(z1)+log(z2)+log(z3)=\pi
