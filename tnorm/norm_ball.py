@@ -2,11 +2,23 @@ from __future__ import print_function
 
 import webbrowser
 import time
+import tempfile
+import contextlib
+import shutil
 
 from tnorm.utilities.x3d_to_html import make_x3d_html
 from tnorm.utilities.sage_types import *
 from tnorm.utilities.hasse import get_hasse
-from tnorm.utilities.utilities import *
+from tnorm.utilities.cached_prop import *
+
+
+@contextlib.contextmanager
+def make_temp_directory():
+    temp_dir = tempfile.mkdtemp()
+    try:
+        yield temp_dir
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 class NormBall(object):

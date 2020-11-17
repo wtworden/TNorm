@@ -28,10 +28,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/wtworden/TNorm",
-    packages=['tnorm', 'tnorm.kernel', 'tnorm.GUI'],
+    packages=['tnorm', 'tnorm.kernel', 'tnorm.GUI', 'tnorm.test', 'tnorm.utilities', 'tnorm.extras'],
     package_data={
         'tnorm.GUI': ['images/spinpoly/*','images/icon/*','data/*'],
-        'tnorm': ['data/x3d_templates/*', 'data/x3dom/*'],
+        'tnorm.utilities': ['data/x3d_templates/*', 'data/x3dom/*'],
         },
     install_requires=dependencies,
     classifiers=[

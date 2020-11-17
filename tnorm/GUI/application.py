@@ -1,15 +1,14 @@
 #!/usr/bin/python
 
-import snappy
 import threading
 import time
 import webbrowser
 import platform
 
+import snappy
 
 from tnorm.GUI.make_graphic import make_hasse, _show_polyhedron
 from tnorm.GUI.make_table import make_qtons_table, make_all_vertices_table, make_facets_table, make_dnb_vertices_table
-from tnorm.utilities.utilities import *
 from tnorm.TN_wrapper import TN_wrapper
 from tnorm.GUI.console import ConsoleText
 from tnorm.utilities.hasse import get_hasse

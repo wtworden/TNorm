@@ -1,7 +1,7 @@
-from tnorm.utilities.utilities import *
+from math import gcd as GCD
+
 from tnorm.utilities.regina_helpers import *
 from tnorm.kernel.matrices import oriented_quads_mat, quads_mat
-
 from tnorm.kernel.orientable import orient
 
 def ends_embedded(qtons, TN_wrapper):
@@ -45,7 +45,8 @@ def is_embedded(qtons,TN_wrapper):
     return False
 
 
-
+def gcd(a,b):
+    return abs(GCD(a,b))
 
 
 

@@ -1,8 +1,4 @@
 
-import contextlib
-import tempfile
-import shutil
-from math import gcd as GCD
 
 class cached_property(object):
     """
@@ -25,24 +21,8 @@ class cached_property(object):
         return attr
 
 
-@contextlib.contextmanager
-def make_temp_directory():
-    temp_dir = tempfile.mkdtemp()
-    try:
-        yield temp_dir
-    finally:
-        shutil.rmtree(temp_dir)
 
 
-def lcm(list_of_ints):
-    L = list_of_ints
-    LCM = 1
-    for k in L:
-        LCM = LCM*k//gcd(LCM,k)
-    return LCM
-
-def gcd(a,b):
-    return abs(GCD(a,b))
 
 
 

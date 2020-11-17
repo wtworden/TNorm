@@ -2,12 +2,12 @@
 # Advanced zoom for images of various types from small to huge up to several GB
 import math
 import warnings
-from tnorm.GUI.scroll_bars import AutoScrollbar
-import tkinter as tk
 
+import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 
+from tnorm.GUI.scroll_bars import AutoScrollbar
 
 class CanvasImage:
     """ Display and zoom image """

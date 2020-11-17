@@ -1,10 +1,8 @@
 from __future__ import print_function
+import sys
 
 import tkinter as tk
-
 from tkinter import ttk
-
-import sys
 
 
 def generate_summary(tnorm_app):

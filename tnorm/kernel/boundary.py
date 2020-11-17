@@ -1,16 +1,8 @@
 import snappy
-import tnorm.kernel.matrices
-import tnorm.utilities.regina_helpers
 
-#from tnorm.kernel.matrices import oriented_quads_mat, peripheral_curve_mats, quad_bdy_mat, intersection_mat, pos_intersection_mat, neg_intersection_mat  
 from tnorm.kernel import matrices
 from tnorm.utilities.regina_helpers import regina_to_sage_int, regina_to_sage_mat
-
-
 from tnorm.utilities.sage_types import *
-
-#from tnorm.utilities import gcd
-#from sympy import Rational as QQ
 
 
 

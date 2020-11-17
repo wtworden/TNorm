@@ -2,6 +2,7 @@ from __future__ import print_function
 #from math import floor ## Warning: returns float
 
 import sys
+
 from .sage_types import *
 
 def get_hasse(P):

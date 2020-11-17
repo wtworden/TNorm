@@ -14,6 +14,9 @@ from sage.all import VectorSpace
 from sage.all import QQ
 #from sage.all import lcm
 from sage.all import load_attach_path
+from sage.all import arctan
+from sage.all import arccos
+from sage.all import pi
 
 
 from sage.misc.misc import SAGE_TMP

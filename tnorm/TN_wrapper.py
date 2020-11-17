@@ -1,5 +1,6 @@
 #-*-python-*-
 from __future__ import print_function
+from math import gcd as GCD
 
 import sys
 try:
@@ -25,7 +26,6 @@ from tnorm.utilities.regina_helpers import regina_to_sage_int
 from tnorm.kernel.embedded import is_embedded, ends_embedded
 from tnorm.norm_ball import *
 from tnorm.utilities.sage_types import *
-from tnorm.utilities.utilities import *
 from tnorm.utilities.x3d_to_html import *
 
 
@@ -894,9 +894,15 @@ def int_slopes(slopes):
 	return [tuple([int(c) for c in s]) for s in slopes]
 
 
+def lcm(list_of_ints):
+    L = list_of_ints
+    LCM = 1
+    for k in L:
+        LCM = LCM*k//gcd(LCM,k)
+    return LCM
 
-
-
+def gcd(a,b):
+    return abs(GCD(a,b))
 
 
 
