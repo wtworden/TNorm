@@ -17,7 +17,12 @@ from sage.all import load_attach_path
 from sage.all import arctan
 from sage.all import arccos
 from sage.all import pi
-
+from sage.all import sin
+from sage.all import cos
+from sage.all import arctan
+from sage.all import arcsin
+from sage.all import sqrt
+from sage.all import span
 
 from sage.misc.misc import SAGE_TMP
 

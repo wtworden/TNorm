@@ -2,16 +2,16 @@
 <Group>
 <Group DEF='ArrowGreen'>
 <Shape>
-<Cylinder DEF='ArrowCylinder' radius='{3}' top='false' height={0}>
+<Cylinder DEF='ArrowCylinder' radius='{9}' top='false' height={0}>
 </Cylinder> 
 <Appearance DEF='Green'>
-<Material diffuseColor='.1 .6 .1' emissiveColor='.05 .2 .05'>
+<Material diffuseColor='0 1 0' emissiveColor='.05 .4 .05'>
 </Material>
 </Appearance>
 </Shape> 
 <Transform translation='0 {1} 0'>
 <Shape>
-<Cone DEF='ArrowCone' bottomRadius='{4}' height='{5}'>
+<Cone DEF='ArrowCone' bottomRadius='{10}' height='{11}'>
 </Cone> 
 <Appearance USE='Green'>
 </Appearance>
@@ -21,12 +21,11 @@
 <Transform translation='0 {2} 0' scale='.5 .5 .5'>
 <Billboard axisOfRotation='0 0 0'>
 <Shape>
-<Appearance DEF='LABEL_APPEARANCE'>
-<Material diffuseColor='1 1 0' emissiveColor='1 1 0' shininess='1.0'>
+<Appearance USE='Green'>
 </Material>
 </Appearance> 
-<Text string='+y'>
-<FontStyle DEF='LABEL_FONT'>
+<Text string='y'>
+<FontStyle DEF='LABEL_FONT' size='.7' quality='3.0'>
 </FontStyle>
 </Text>
 </Shape>
@@ -40,14 +39,14 @@
 <Group>
 <Group DEF='ArrowRed'>
 <Shape>
-<Cylinder USE='ArrowCylinder'>
+<Cylinder radius='{9}' top='false' height={3}>
 </Cylinder> 
 <Appearance DEF='Red'>
-<Material diffuseColor='.7 .1 .1' emissiveColor='.33 0 0'>
+<Material diffuseColor='1 0 0' emissiveColor='.33 0 0'>
 </Material>
 </Appearance>
 </Shape> 
-<Transform translation='0 {1} 0'>
+<Transform translation='0 {4} 0'>
 <Shape>
 <Cone USE='ArrowCone'>
 </Cone> 
@@ -56,13 +55,13 @@
 </Shape>
 </Transform>
 </Group> 
-<Transform rotation='0 0 1 0' translation='0 {2} 0' scale='.5 .5 .5'>
+<Transform rotation='0 0 1 0' translation='0 {5} 0' scale='.5 .5 .5'>
 <!-- note label rotated back to original coordinate frame --> 
 <Billboard axisOfRotation='0 0 0'>
 <Shape>
-<Appearance USE='LABEL_APPEARANCE'>
+<Appearance USE='Red'>
 </Appearance> 
-<Text string='+x'>
+<Text string='x'>
 <FontStyle USE='LABEL_FONT'>
 </FontStyle>
 </Text>
@@ -80,14 +79,14 @@
 <Group>
 <Group DEF='ArrowBlue'>
 <Shape>
-<Cylinder USE='ArrowCylinder'>
+<Cylinder radius='{9}' top='false' height={6}>
 </Cylinder> 
 <Appearance DEF='Blue'>
-<Material diffuseColor='.3 .3 1' emissiveColor='.1 .1 .33'>
+<Material diffuseColor='0 0 1' emissiveColor='.05 .05 .53'>
 </Material>
 </Appearance>
 </Shape> 
-<Transform translation='0 {1} 0'>
+<Transform translation='0 {7} 0'>
 <Shape>
 <Cone USE='ArrowCone'>
 </Cone> 
@@ -96,13 +95,13 @@
 </Shape>
 </Transform>
 </Group> 
-<Transform rotation='1 0 0 0' translation='0 {2} 0' scale='.5 .5 .5'>
+<Transform rotation='1 0 0 0' translation='0 {8} 0' scale='.5 .5 .5'>
 <!-- note label rotated back to original coordinate frame --> 
 <Billboard axisOfRotation='0 0 0'>
 <Shape>
-<Appearance USE='LABEL_APPEARANCE'>
+<Appearance USE='Blue'>
 </Appearance> 
-<Text string='+z'>
+<Text string='z'>
 <FontStyle USE='LABEL_FONT'>
 </FontStyle>
 </Text>

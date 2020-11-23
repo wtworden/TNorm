@@ -5,6 +5,7 @@ import time
 import tempfile
 import contextlib
 import shutil
+import os
 
 from tnorm.utilities.x3d_to_html import make_x3d_html
 from tnorm.utilities.sage_types import *
@@ -118,7 +119,7 @@ class NormBall(object):
         plt = self.polyhedron().plot(dpi=200) + labels
         return plt
 
-    def plot(self, viewer='x3d', online=False, opacity=1):
+    def plot(self, viewer='x3d', online=False, transparency=.4, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=False, window_size=(1000,700)):
         dual = True if isinstance(self, DualNormBall) else False
         P = self.polyhedron()
         if not P.is_compact():
@@ -129,7 +130,7 @@ class NormBall(object):
         elif P.dim() in [3,4]:
             if viewer == 'x3d':
                 with make_temp_directory() as temp_dir:
-                    filename = make_x3d_html(self, online=online, directory=temp_dir, dual=dual)
+                    filename = make_x3d_html(self, transparency=transparency, online=online, directory=temp_dir, dual=dual, show_labels=show_labels, show_axes=show_axes, highlight_edges=highlight_edges, label_color=label_color, edge_color=edge_color, label_size=label_size, edge_thickness=edge_thickness, vertex_size=vertex_size, ball_color=ball_color, draw_schlegel_faces=draw_schlegel_faces,window_size=window_size)
                     webbrowser.open('file://'+filename)
                     time.sleep(5)
             else:
