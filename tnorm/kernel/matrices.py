@@ -1,5 +1,5 @@
 
-from tnorm.utilities.sage_types import *
+from tnorm.utilities.sage_types import Matrix
 #from sympy import Matrix as Matrix
 from tnorm.utilities.regina_helpers import get_oriented_quads, get_quads, in_cusp
 
@@ -72,8 +72,8 @@ def quad_bdy_mat(oriented_spun_surface, cusp):
 
 ### Matrix that encodes how curves intersect with quad types, restricted to intersections
 ### that contribute to the positive boundary (see Cooper--Tillmann--Worden Fig 5).def pos_intx_matrix():
-def pos_intersection_mat():
-    return Matrix([[0, 0, 0, 0, 0, 0],
+
+POS_INTERSECTION_MAT = Matrix([[0, 0, 0, 0, 0, 0],
                    [1,0, 0, 0, 0, 0],
                    [0, 0, 1,0, 0, 0],
                    [0, 0, 0, 0, 1,0],
@@ -92,8 +92,7 @@ def pos_intersection_mat():
 
 ### Matrix that encodes how curves intersect with quad types, restricted to intersections
 ### that contribute to the negative boundary (see Cooper--Tillmann--Worden Fig 5).
-def neg_intersection_mat():
-    return Matrix([[0, 0, 0, 0, 0, 0],
+NEG_INTERSECTION_MAT = Matrix([[0, 0, 0, 0, 0, 0],
                    [0,-1, 0, 0, 0, 0],
                    [0, 0, 0,-1, 0, 0],
                    [0, 0, 0, 0, 0,-1],
@@ -110,8 +109,7 @@ def neg_intersection_mat():
                    [-1, 0, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0, 0]])
 ### Matrix that encodes how curves intersect with quad types (see Cooper--Tillmann--Worden Fig 5).
-def intersection_mat():
-    return Matrix([[0, 0, 0, 0, 0, 0],
+INTERSECTION_MAT = Matrix([[0, 0, 0, 0, 0, 0],
                    [1,-1, 0, 0, 0, 0],
                    [0, 0, 1,-1, 0, 0],
                    [0, 0, 0, 0, 1,-1],
@@ -127,7 +125,9 @@ def intersection_mat():
                    [0, 0,-1, 1, 0, 0],
                    [-1, 1, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0, 0]])
-def dot_product(v,w):
-    return v.dot_product(w)
+
+ABSNEG_INTERSECTION_MAT = NEG_INTERSECTION_MAT.apply_map(abs)
+
+
 
                   

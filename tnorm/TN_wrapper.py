@@ -10,29 +10,17 @@ except ValueError:
 import regina
 
 import snappy
-import time
-import itertools
-
-
-#import imp
-#regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
 
 from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2, qtons_image_in_C2
-from tnorm.kernel.boundary import bdy_slopes_unoriented_, signed_bdy_maps
+from tnorm.kernel.boundary import signed_bdy_maps
 from tnorm.kernel.euler import solve_lin_gluing_eq, euler_char_
 from tnorm.kernel.homology import _map_to_H2, _map_to_H1bdy
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
 from tnorm.utilities.regina_helpers import regina_to_sage_int
 from tnorm.kernel.embedded import is_embedded, ends_embedded
-from tnorm.norm_ball import *
-from tnorm.utilities.sage_types import *
-from tnorm.utilities.x3d_to_html import *
-
-
-
-#from sympy import Matrix
-#from sympy import Rational as QQ
-
+from tnorm.norm_ball import TNormBall, DualNormBall, NBVertex, Ray, DualVertex
+from tnorm.utilities.sage_types import Matrix, vector, VectorSpace, Polyhedron, RR, QQ
+from tnorm.utilities.cached_prop import cached_property
 
 #preparser(False)
 
@@ -470,28 +458,6 @@ class TN_wrapper(object):
 
 		return self._num_H1bdy_comps[ind]	
 
-	def map_to_H2(self, qtons):
-		"""
-		Return the image of the given surface in H2(M, bdy(M)). Argument can be a surface (regina quad transversely oriented
-		normal surface) or the index of a surface.
-
-		sage: W.mapToH2(3)    # return the image in H2(M,bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
-		(0,1,0)
-
-		"""
-		if not self.uses_simplicial_homology():
-			try:
-				ind = int(qtons)
-			except TypeError:
-				ind = int(qtons.name())
-	
-			if not ind in self._map_to_H2:
-				s = self.qtons().surface(ind)
-				self._map_to_H2[ind] = _map_to_H2(s, self)
-			
-			return self._map_to_H2[ind]
-		else:
-			return self._simplicial_map_to_H2(qtons)
 
 	def simplicial_class(self,qtons):
 		""" Return the vector in the dimension 2 chain group C2 corresponding to the qtons surface. The i^th coordinate
@@ -590,6 +556,29 @@ class TN_wrapper(object):
 
 		return self._map_to_ball[ind]
 
+
+	def map_to_H2(self, qtons):
+		"""
+		Return the image of the given surface in H2(M, bdy(M)). Argument can be a surface (regina quad transversely oriented
+		normal surface) or the index of a surface.
+
+		sage: W.mapToH2(3)    # return the image in H2(M,bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
+		(0,1,0)
+
+		"""
+		if not self.uses_simplicial_homology():
+			try:
+				ind = int(qtons)
+			except TypeError:
+				ind = int(qtons.name())
+	
+			if not ind in self._map_to_H2:
+				s = self.qtons().surface(ind)
+				self._map_to_H2[ind] = _map_to_H2(s, self)
+			
+			return self._map_to_H2[ind]
+		else:
+			return self._simplicial_map_to_H2(qtons)
 		
 	def _image_in_H2M(self):
 		image = []

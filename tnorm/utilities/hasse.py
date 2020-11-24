@@ -1,9 +1,6 @@
 from __future__ import print_function
-#from math import floor ## Warning: returns float
 
-import sys
-
-from .sage_types import *
+from .sage_types import Graphics, floor
 
 def get_hasse(P):
     G = Graphics()

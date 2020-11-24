@@ -9,7 +9,6 @@ import tkinter as tk
 from tkinter import ttk
 
 from tnorm.GUI.canvas_image import CanvasImage
-import tnorm
 
 
 @contextlib.contextmanager

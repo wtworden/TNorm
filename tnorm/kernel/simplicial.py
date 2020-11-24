@@ -1,4 +1,4 @@
-from tnorm.utilities.sage_types import *
+from tnorm.utilities.sage_types import vector, Matrix
 from tnorm.utilities.regina_helpers import regina_to_sage_int
 
 """

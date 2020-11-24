@@ -1,11 +1,8 @@
 #!/usr/bin/python
 
 import threading
-import time
-import webbrowser
 import platform
 
-import snappy
 
 from tnorm.GUI.make_graphic import make_hasse, _show_polyhedron
 from tnorm.GUI.make_table import make_qtons_table, make_all_vertices_table, make_facets_table, make_dnb_vertices_table
@@ -16,15 +13,12 @@ from tnorm.GUI.canvas_image import CanvasImage
 from tnorm.GUI.summary_page import generate_summary, generate_nb_overview, generate_dnb_overview
 # background="..." doesn't work...
 
-import PIL
-from PIL import ImageTk
+#import PIL
+#from PIL import ImageTk
 
-import tempfile
-import re
 import os
 import io
 import sys
-#from math import sin, cos, pi, ceil, sqrt
 
 FileType = io.TextIOWrapper if sys.version_info >= (3, 0) else file
 
@@ -415,8 +409,7 @@ class TNormApp:
 
     def load(self):
         try:
-            string = self.ManifoldEntry.get()
-            M=snappy.Manifold(string)
+            M = self.ManifoldEntry.get()
             computing=True
             t = threading.Thread(target=self.load_computations, args=(M,))
             t.start()

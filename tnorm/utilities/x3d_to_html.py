@@ -1,9 +1,8 @@
 
 import os
-import tempfile
 import shutil
 
-from .sage_types import *
+from .sage_types import pi, sin, cos, arccos, arcsin, arctan, sqrt, span, vector, Matrix, n
 
 VERTEX_RADIUS = '.03'
 AXIS_RADIUS = '.008'

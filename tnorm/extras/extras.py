@@ -5,7 +5,7 @@ from tnorm.kernel import embedded, orientable, connected, euler
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
 from tnorm.kernel.boundary import signed_bdy_maps
 import snappy
-from tnorm.utilities.sage_types import *
+from tnorm.utilities.sage_types import Matrix
 
 
 def orient(S):
@@ -15,9 +15,20 @@ def is_orientable(S):
     return orientable.is_orientable(S)
 
 def euler_char(S):
-    return euler.euler_char_(S,euler.solve_lin_gluing_eq(S.triangulation()))
+    assert T.is_ideal(), 'the triangulation must be ideal.'
+    T = S.triangulation()
+    return euler.euler_char_(S,euler.solve_lin_gluing_eq(T))
+
+def genus(S):
+    return (2-num_boundary_comps(S)-euler_char(S))/2
+
+def num_boundary_comps(S):
+    b = S.boundaryIntersections()
+    return sum([b.gcdRow(i) for i in range(b.rows())])
 
 def oriented_boundary_slopes(S):
+    orient = orient(S)
+    assert orient != False, 'the surface is not orientable.'
     T = S.triangulation()
     M = snappy.Manifold(T.snapPea())
     pc_mats = peripheral_curve_mats(M,T)

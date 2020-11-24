@@ -1,23 +1,12 @@
-#from sympy import Matrix
-#from sympy import Rational as QQ
+
+from .sage_types import Integer, QQ, Matrix
 
 
-#import imp
-#regina = imp.load_source('regina', '/Applications/SageMath/local/lib/python2.7/site-packages/sageRegina-5.1.5-py2.7.egg-info')
-
-from .sage_types import *
-
-
-
-### identify which cusp the given vertex of the given tetrahedron is in
-#def get_cusp_index(T,tet,vertex):
-#    return T.tetrahedron(int(tet)).vertex(int(vertex)).boundaryComponent().index()
 
 ### return True if vertex "vert" of tetrahedron "tet" is in given cusp
 def in_cusp(T,tet,vert,cusp):
     return T.tetrahedron(int(tet)).vertex(int(vert)) == T.cusp(cusp).vertex()
 
-#    return get_cusp_index(T,tet,vert)==cusp
 
 
 ### convert regina types (integers, rational, matrices) to sage types

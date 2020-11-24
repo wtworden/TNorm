@@ -1,21 +1,20 @@
 from math import gcd as GCD
 
-from tnorm.utilities.regina_helpers import *
-from tnorm.kernel.matrices import oriented_quads_mat, quads_mat
+from tnorm.utilities.sage_types import Matrix
+from tnorm.kernel.matrices import oriented_quads_mat
 from tnorm.kernel.orientable import orient
 
+
+
 def ends_embedded(qtons, TN_wrapper):
-    W = TN_wrapper
-    for i in range(W.num_cusps()):
-        pos_bdy = W.spinning_slopes(qtons)[0][i]
-        neg_bdy = W.spinning_slopes(qtons)[1][i]
-        gcd_pos = gcd(pos_bdy[0],pos_bdy[1])
-        gcd_neg = gcd(neg_bdy[0],neg_bdy[1])
+    pos_bdy, neg_bdy = TN_wrapper.boundary_slopes(qtons).values()
+    for i in range(len(pos_bdy)):
+        gcd_pos = gcd(pos_bdy[i][0],pos_bdy[i][1])
+        gcd_neg = gcd(neg_bdy[i][0],neg_bdy[i][1])
         if gcd_pos != 0 and gcd_neg != 0:
-            if not ( pos_bdy[0]/gcd_pos == neg_bdy[0]/gcd_neg and pos_bdy[1]/gcd_pos == neg_bdy[1]/gcd_neg ):
+            if not ( pos_bdy[i][0]/gcd_pos == - neg_bdy[i][0]/gcd_neg and pos_bdy[i][1]/gcd_pos == - neg_bdy[i][1]/gcd_neg ):
                 return False
     return True
-
 
 def is_embedded(qtons,TN_wrapper):
     W = TN_wrapper

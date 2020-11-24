@@ -1,8 +1,7 @@
-import snappy
 
 from tnorm.kernel import matrices
-from tnorm.utilities.regina_helpers import regina_to_sage_int, regina_to_sage_mat
-from tnorm.utilities.sage_types import *
+from tnorm.utilities.regina_helpers import regina_to_sage_int
+from tnorm.utilities.sage_types import Integer, QQ
 
 
 
@@ -20,14 +19,17 @@ def signed_bdy_maps(oriented_spun_surface, peripheral_curve_mats, spinning=False
     quads_mat = oriented_quads_mat
 
 
-    pos_intx_mat = matrices.pos_intersection_mat()
-    neg_intx_mat = matrices.neg_intersection_mat()
+    pos_intx_mat = matrices.POS_INTERSECTION_MAT
+    neg_intx_mat = matrices.NEG_INTERSECTION_MAT
     if spinning:
-        neg_intx_mat = neg_intx_mat.apply_map(abs)
+        neg_intx_mat = matrices.ABSNEG_INTERSECTION_MAT
     pos_slopes = []                   # on a surface affects boundary orientations.
     neg_slopes = []
     if quads_mat == None:
         quads_mat = matrices.oriented_quads_mat(s)
+
+    pos_intx_times_quad_mat = (pos_intx_mat*quads_mat.transpose()).transpose()
+    neg_intx_times_quad_mat = (neg_intx_mat*quads_mat.transpose()).transpose()
 
     for c in range(T.countCusps()):
         periph_mat = peripheral_curve_mats[c] # get the matrix that encodes meridian and longitude for cusp c.
@@ -36,11 +38,12 @@ def signed_bdy_maps(oriented_spun_surface, peripheral_curve_mats, spinning=False
         iota_mu_pos=0
         iota_lambda_neg=0
         iota_mu_neg=0
+
         for i in range(T.size()):
-            iota_lambda_pos += Integer(periph_mat[0][i]*pos_intx_mat*quads_mat[i])
-            iota_mu_pos += Integer(periph_mat[1][i]*pos_intx_mat*quads_mat[i])
-            iota_lambda_neg += Integer(periph_mat[0][i]*neg_intx_mat*quads_mat[i])
-            iota_mu_neg += Integer(periph_mat[1][i]*neg_intx_mat*quads_mat[i])
+            iota_lambda_pos += Integer(periph_mat[0][i]*pos_intx_times_quad_mat[i])
+            iota_mu_pos += Integer(periph_mat[1][i]*pos_intx_times_quad_mat[i])
+            iota_lambda_neg += Integer(periph_mat[0][i]*neg_intx_times_quad_mat[i])
+            iota_mu_neg += Integer(periph_mat[1][i]*neg_intx_times_quad_mat[i])
 
   
         pos_slopes.append((-iota_lambda_pos,iota_mu_pos))

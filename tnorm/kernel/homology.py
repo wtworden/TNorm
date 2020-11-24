@@ -1,9 +1,4 @@
-#from sympy import Rational as QQ
-from tnorm.utilities.sage_types import *
-
-from tnorm.kernel.matrices import oriented_quads_mat, dot_product
-from tnorm.utilities.regina_helpers import get_oriented_quads
-from tnorm.kernel.boundary import signed_bdy_maps
+from tnorm.utilities.sage_types import vector
 
 
 def _map_to_H1bdy(oriented_spun_surface, TN_wrapper):

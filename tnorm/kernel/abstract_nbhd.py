@@ -1,5 +1,5 @@
-from tnorm.utilities.regina_helpers import *
-from tnorm.utilities.sage_types import *
+from tnorm.utilities.regina_helpers import regina_to_sage_int
+from tnorm.utilities.sage_types import Matrix
 
 
 
