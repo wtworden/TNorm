@@ -4,6 +4,7 @@ import time
 import tempfile
 import contextlib
 import shutil
+import webbrowser
 
 from tnorm.utilities.x3d_to_html import make_x3d_html
 from tnorm.utilities.sage_types import vector, Graphics, text3d, Polyhedron, text, RR, QQ

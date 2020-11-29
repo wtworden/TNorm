@@ -2,7 +2,9 @@
 
 import threading
 import platform
-
+import os
+import io
+import sys
 
 from tnorm.GUI.make_graphic import make_hasse, _show_polyhedron
 from tnorm.GUI.make_table import make_qtons_table, make_all_vertices_table, make_facets_table, make_dnb_vertices_table
@@ -15,10 +17,8 @@ from tnorm.GUI.summary_page import generate_summary, generate_nb_overview, gener
 
 #import PIL
 #from PIL import ImageTk
+import snappy
 
-import os
-import io
-import sys
 
 FileType = io.TextIOWrapper if sys.version_info >= (3, 0) else file
 
@@ -123,22 +123,26 @@ class TNormApp:
         self.LoadOptionsFrame.pack(side=TOP,fill=X)
 
         self.allow_na_var = IntVar(None, 0)
-        self.AllowsAdmissible = tk.Checkbutton(self.LoadOptionsFrame, bg=BG_COLOR, text='Allow non-admissible', variable=self.allow_na_var)
+        self.AllowsAdmissible = tk.Checkbutton(self.LoadOptionsFrame, bg=BG_COLOR, text='Allow non-admissible ', variable=self.allow_na_var)
         self.AllowsAdmissible.pack(side=TOP)
 
-        self.BasisOption = tk.Frame(self.LoadOptionsFrame, bg=BG_COLOR)
-        self.BasisOption.pack(side=TOP, anchor=NW)
+        self.force_simplicial = IntVar(None, 0)
+        self.ForceSimplicial = tk.Checkbutton(self.LoadOptionsFrame, bg=BG_COLOR, text='Use simplicial H2 map', variable=self.force_simplicial)
+        self.ForceSimplicial.pack(side=TOP)
 
-        self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='Peripheral curves:')
-        self.BasisLabel.grid(row=0,column=0,sticky='nw')
-
-        self.bdy_H1_basis_var = StringVar(None,'natural')
-        self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='canonical (if link)', variable=self.bdy_H1_basis_var, value='natural')
-        self.NaturalRadio.grid(row=1, column=0, sticky='w', padx=10)
-
-        self.ShortestRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='shortest', variable=self.bdy_H1_basis_var, value='shortest')
-        self.ShortestRadio.grid(row=2, column=0, sticky='w', padx=10)
-        self.bdy_H1_basis_var.set('natural')
+        #self.BasisOption = tk.Frame(self.LoadOptionsFrame, bg=BG_COLOR)
+        #self.BasisOption.pack(side=TOP, anchor=NW)
+#
+        #self.BasisLabel = tk.Label(self.BasisOption, bg=BG_COLOR, text='Peripheral curves:')
+        #self.BasisLabel.grid(row=0,column=0,sticky='nw')
+#
+        #self.bdy_H1_basis_var = StringVar(None,'natural')
+        #self.NaturalRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='canonical (if link)', variable=self.bdy_H1_basis_var, value='natural')
+        #self.NaturalRadio.grid(row=1, column=0, sticky='w', padx=10)
+#
+        #self.ShortestRadio = tk.Radiobutton(self.BasisOption, background=BG_COLOR, text='shortest', variable=self.bdy_H1_basis_var, value='shortest')
+        #self.ShortestRadio.grid(row=2, column=0, sticky='w', padx=10)
+        #self.bdy_H1_basis_var.set('natural')
 
 
 
@@ -409,8 +413,9 @@ class TNormApp:
 
     def load(self):
         try:
-            M = self.ManifoldEntry.get()
+            M_str = self.ManifoldEntry.get()
             computing=True
+            M = snappy.Manifold(M_str)
             t = threading.Thread(target=self.load_computations, args=(M,))
             t.start()
             self.start_spin()
@@ -420,16 +425,18 @@ class TNormApp:
 
     def load_computations(self, M):
 #        try:
-        self.disable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel, self.OverviewButton])
+        #self.disable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel, self.ForceSimplicial, self.OverviewButton])
+        self.disable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial, self.OverviewButton])
         self.disable_all_buttons()
         self.disable_all_tabs()
         self.clear_all_tabs()
-        self.wrapper = TN_wrapper(M, allows_non_admissible=bool(self.allow_na_var.get()), bdy_H1_basis=self.bdy_H1_basis_var.get())
+        self.wrapper = TN_wrapper(M, allows_non_admissible=bool(self.allow_na_var.get()), force_simplicial_homology=bool(self.force_simplicial.get()))
         self.ball = self.wrapper.norm_ball
         self.dual_ball = self.wrapper.dual_norm_ball
         generate_summary(self)
         self.tabs_normal()
-        self.enable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel])
+        #self.enable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.ForceSimplicial, self.BasisLabel])
+        self.enable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial])
         self.Notebook.select(self.SummaryTab)
 #        except Exception as e: print('Error: {}'.format(e))
         self.stop_spin()

@@ -13,19 +13,19 @@
                        After loading a manifold, click the 'norm ball' or           
                        'dual norm ball' tabs to view more detailed information      
                        about each, or click on the 'qton surfaces' tab to view 
-                       information about all quad transversely oriented normal
+                       information about all transversely oriented normal
                        surfaces (not just vertices of the norm ball). Buttons
                        at left give additional information about the norm ball.
 
                        In the case where the Thurston norm is a semi-norm (and 
-                       not a norm), e.g., when the manifold is not hyperbolic,
-                       things may go wrong. You should not trust the results of 
-                       such computations, though they might be correct for some
-                       manifolds. When tnorm IS able to compute the norm ball, it
-                       is a non-compact polyhedron, so we can only graph its
-                       projection to the subspace in which it is a norm. We also
-                       give the option in this case of viewing the convex hull of
-                       the image in H2 of normal surfaces having negative Euler
+                       not a norm), e.g., this can happen if the manifold is not 
+                       hyperbolic, things may go wrong. You should not trust the 
+                       results of such computations, though they might be correct 
+                       for some manifolds. When tnorm IS able to compute the norm 
+                       ball, it is a non-compact polyhedron, so we can only graph 
+                       its projection to the subspace in which it is a norm. We 
+                       also give the option in this case of viewing the convex hull 
+                       of the image in H2 of normal surfaces having negative Euler
                        characteristic (this is a finite polyhedron).
 
 

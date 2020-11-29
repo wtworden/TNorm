@@ -20,5 +20,5 @@ from sage.all import arctan
 from sage.all import arcsin
 from sage.all import sqrt
 from sage.all import span
-
+from sage.all import Graph
 

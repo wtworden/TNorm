@@ -1,11 +1,12 @@
 from math import gcd as GCD
-
+import itertools
 
 from tnorm.kernel import embedded, orientable, connected, euler
-from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
-from tnorm.kernel.boundary import signed_bdy_maps
+from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat, quads_mat
+from tnorm.kernel.boundary import inward_oriented_bdy, outward_oriented_bdy, unoriented_spinning_slopes
 import snappy
 from tnorm.utilities.sage_types import Matrix
+from tnorm.utilities.regina_helpers import regina_to_sage_int
 
 
 def orient(S):
@@ -15,65 +16,47 @@ def is_orientable(S):
     return orientable.is_orientable(S)
 
 def euler_char(S):
-    assert T.is_ideal(), 'the triangulation must be ideal.'
     T = S.triangulation()
+    assert T.isIdeal(), 'the triangulation must be ideal.'
     return euler.euler_char_(S,euler.solve_lin_gluing_eq(T))
 
-def genus(S):
-    return (2-num_boundary_comps(S)-euler_char(S))/2
-
-def num_boundary_comps(S):
-    b = S.boundaryIntersections()
-    return sum([b.gcdRow(i) for i in range(b.rows())])
-
-def oriented_boundary_slopes(S):
-    orient = orient(S)
-    assert orient != False, 'the surface is not orientable.'
+def spinning_slopes(S):
+    q_mat = quads_mat(S)
     T = S.triangulation()
     M = snappy.Manifold(T.snapPea())
     pc_mats = peripheral_curve_mats(M,T)
-    pos_bdy, neg_bdy = signed_bdy_maps(S, pc_mats, False, orient(S))
-    return {'outward':pos_bdy, 'inward':neg_bdy}
+    slopes = unoriented_spinning_slopes(S, pc_mats, q_mat)
+    return slopes
 
-def connected(S):
-    pass
+def num_boundary_comps(S):
+    slopes = spinning_slopes(S)
+    return sum([gcd(slope[0],slope[1]) for slope in slopes])
 
-def is_embedded(qtons):
-    S = qtons
+def oriented_boundary_slopes(S, orientation=None):
+    if orientation == None:
+        oriented_quads_mat = sum(orient(S))
+    else:
+        oriented_quads_mat = orientation
+    assert oriented_quads_mat != False, 'the surface is not orientable.'
     T = S.triangulation()
+    M = snappy.Manifold(T.snapPea())
+    pc_mats = peripheral_curve_mats(M,T)
+    out_bdy = outward_oriented_bdy(S, pc_mats, oriented_quads_mat, False)
+    in_bdy = inward_oriented_bdy(S, pc_mats, oriented_quads_mat, False)
 
-    oriented_projection = orient(S)
-    
-    if oriented_projection != False:
+    return {'outward':out_bdy, 'inward':in_bdy}, oriented_quads_mat
 
-        if not T.isClosed():
-            pos_bdy, neg_bdy = oriented_boundary_slopes(S).values()
-            if not ends_embedded(pos_bdy,neg_bdy):
-                return False
+def is_connected(S):
+    return connected.is_connected(S)
 
-        opp_oriented_projection = []
-        for row in oriented_projection:
-            opp_row = []
-            for i in [0,2,4]:
-                opp_row.append(row[i+1])
-                opp_row.append(row[i])
-            opp_oriented_projection.append(opp_row)
+def connected_components(S):
+    return connected.connected_components(S)
 
-        q_mat = oriented_quads_mat(S)
-        
-        if oriented_projection == q_mat or Matrix(opp_oriented_projection) == q_mat:
-            return True
-    return False
-
-
-def ends_embedded(pos_bdy, neg_bdy):
-    for i in range(len(pos_bdy)):
-        gcd_pos = gcd(pos_bdy[i][0],pos_bdy[i][1])
-        gcd_neg = gcd(neg_bdy[i][0],neg_bdy[i][1])
-        if gcd_pos != 0 and gcd_neg != 0:
-            if not ( pos_bdy[i][0]/gcd_pos == - neg_bdy[i][0]/gcd_neg and pos_bdy[i][1]/gcd_pos == - neg_bdy[i][1]/gcd_neg ):
-                return False
-    return True
+def haken_sum(R,S):
+    if R.locallyCompatible(S):
+        return connected.sum(R,S)
+    else:
+        return "these surfaces are not locally compatible!"
 
 
 def gcd(a,b):

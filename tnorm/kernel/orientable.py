@@ -14,10 +14,7 @@ def orient(spun_normal_surface):
     # to vertex 0 of tet. Then oriented_quads[tet] is a list of length k whose i^th entry is +1 if the 
     # orientation of the i^th quad agrees with the local orientation ("alignment"), and -1 if it disagrees.
     # At first, all entries are 0 to indicate that orientation is unknown (or really, not yet determined).
-    oriented_quads = {}
-    for i in range(T.size()):
-        num_quads = regina_to_sage_int(S.quads(i,0) + S.quads(i,1) + S.quads(i,2))
-        oriented_quads[i] = [0]*num_quads
+
 
     abs_nbhds = abstract_nbhds(S)
 
@@ -34,15 +31,29 @@ def orient(spun_normal_surface):
     # iterator for assigning orientations to quads. See below.
     def iterate(comp, abstract_comps, oriented_quads, orientn_wrt_nbd=1):
         orientable = True
+
+        # we iterate through the normal quadrilateral disks in the component comp, 
+        # triangular disks are skips because we have already removed them from comp
         for i in range(len(comp['tets'])):
+
+            # set orientation of this quad with respect to the tet
             orientn_wrt_tet = comp['align'][i]*orientn_wrt_nbd
+
+            # if the orientation of the quad is not already set in "oriented_quads",
+            # then set it to orientation found above
             if oriented_quads[comp['tets'][i]][comp['components'][i]] == 0:
                 oriented_quads[comp['tets'][i]][comp['components'][i]] = orientn_wrt_tet
+            
+            # if there is already an orientation on the quad set in "oriented_quads",
+            # then make sure it matches the orientation found above. If it doesn't,
+            # then set orientalbe to False, and break.
             else:
                 if oriented_quads[comp['tets'][i]][comp['components'][i]] != orientn_wrt_tet:
                     orientable = False
                     break
 
+            # for each quad in comp, look for other components that it appears in, and add each 
+            # of them, along with the orientation comp induces on them, to the list "new_comps"
             new_comps = []
             for other_comp in abstract_comps:
                 for j in range(len(other_comp['tets'])):
@@ -51,9 +62,12 @@ def orient(spun_normal_surface):
                         new_comps.append((other_comp,new_orientn_wrt_nbd))
                         break
 
+            # remove from abstract_comps all the components we just added to new_comps
             for new_comp in new_comps:
                 abstract_comps.remove(new_comp[0])
 
+            # for each component in new_comps, run iterate again. If new_comps is empty, then
+            # we have exhausted this connected component, so we return
             for new_comp in new_comps:
                 abstract_comps, oriented_quads, orientable = iterate(new_comp[0],abstract_comps,oriented_quads,new_comp[1])
                 if not orientable:
@@ -66,27 +80,41 @@ def orient(spun_normal_surface):
     # on the quad. Iterate until we run out of components, or until we come to a component where the 
     # orientation induced by the quad that brought us there disagrees with the orientation of another quad
     # which has already been oriented (in which cases the surface is not orientable).
+    oriented_quads_matrices = []
     while len(abstract_comps) > 0:
+        # get a component. When we call iterate() below, we stay in this call to iterate
+        # until we get orientations that are not compatible, or the component containing 
+        # comp is completely oriented.
+        oriented_quads = {}
+        for i in range(T.size()):
+            num_quads = regina_to_sage_int(S.quads(i,0) + S.quads(i,1) + S.quads(i,2))
+            oriented_quads[i] = [0]*num_quads
+
         comp = abstract_comps.pop()
         abstract_comps, oriented_quads, orientable = iterate(comp, abstract_comps, oriented_quads)
         if not orientable:
             break
+
+        # if orientable is still set to True, then this component is orientable, so we
+        # compute the oriented_quads_mat for the component and store it in oriented_quads_matrices.
+        if orientable:
+            quads = quads_mat(S)
+            emb_oriented_quads_mat = []
+            for i in range(T.size()):
+                row=[]
+                for j in [0,1,2]:
+                    if quads[i][j] != 0:
+                        pos = sum([k for k in oriented_quads[i] if k==1])
+                        neg = -sum([k for k in oriented_quads[i] if k==-1])
+                        #assert pos+neg == quads[i][j]
+                        row.append(pos)
+                        row.append(neg)
+                    else:
+                        row.append(0); row.append(0)
+                emb_oriented_quads_mat.append(row)
+            oriented_quads_matrices.append(Matrix(emb_oriented_quads_mat))
     if orientable:
-        quads = quads_mat(S)
-        emb_oriented_quads_mat = []
-        for i in range(T.size()):
-            row=[]
-            for j in [0,1,2]:
-                if quads[i][j] != 0:
-                    pos = sum([k for k in oriented_quads[i] if k==1])
-                    neg = -sum([k for k in oriented_quads[i] if k==-1])
-                    assert pos+neg == quads[i][j]
-                    row.append(pos)
-                    row.append(neg)
-                else:
-                    row.append(0); row.append(0)
-            emb_oriented_quads_mat.append(row)
-        return Matrix(emb_oriented_quads_mat)
+        return oriented_quads_matrices
     else:
         return False
 

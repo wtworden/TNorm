@@ -5,7 +5,7 @@ from .sage_types import Integer, QQ, Matrix
 
 ### return True if vertex "vert" of tetrahedron "tet" is in given cusp
 def in_cusp(T,tet,vert,cusp):
-    return T.tetrahedron(int(tet)).vertex(int(vert)) == T.cusp(cusp).vertex()
+    return T.tetrahedron(int(tet)).vertex(int(vert)) == T.cusp(int(cusp)).vertex()
 
 
 

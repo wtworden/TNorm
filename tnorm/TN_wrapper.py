@@ -12,7 +12,7 @@ import regina
 import snappy
 
 from tnorm.kernel.simplicial import get_face_map_to_C2, get_quad_map_to_C2, H2_as_subspace_of_C2, qtons_image_in_C2
-from tnorm.kernel.boundary import signed_bdy_maps
+from tnorm.kernel.boundary import inward_oriented_bdy, outward_oriented_bdy
 from tnorm.kernel.euler import solve_lin_gluing_eq, euler_char_
 from tnorm.kernel.homology import _map_to_H2, _map_to_H1bdy
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
@@ -41,7 +41,7 @@ class TN_wrapper(object):
 	sage: W = TN_wrapper(string)       # where string is the triangulation encoded as a string (i.e., contents of a tri file)
 	
 	"""
-	def __init__(self, manifold, qtons=None, quiet=False, tracker=False, allows_non_admissible=False, bdy_H1_basis='natural', force_simplicial_homology=False):
+	def __init__(self, manifold, qtons=None, quiet=False, tracker=False, allows_non_admissible=False, force_simplicial_homology=False):
 		
 		self._triangulation = None
 		if isinstance(manifold,str):
@@ -71,11 +71,12 @@ class TN_wrapper(object):
 				self._knows_link_complement = True
 			except ValueError:
 				self._knows_link_complement = False
-			if self._knows_link_complement and bdy_H1_basis == 'natural':
-				self._bdy_H1_basis = 'natural'
-			else:
-				self._manifold.set_peripheral_curves('shortest')
-				self._bdy_H1_basis = 'shortest'
+			#if self._knows_link_complement and bdy_H1_basis == 'natural':
+			#	self._bdy_H1_basis = 'natural'
+			#else:
+			#	if self._manifold.verify_hyperbolicity()[0]:
+			#		self._manifold.set_peripheral_curves('shortest')
+			#		self._bdy_H1_basis = 'shortest'
 
 			self._triangulation = regina.SnapPeaTriangulation(self._manifold._to_string())
 			self._angle_structure = solve_lin_gluing_eq(self._triangulation)
@@ -87,7 +88,7 @@ class TN_wrapper(object):
 				for _ in range(10):
 					self._triangulation.intelligentSimplify()
 			self._manifold_is_closed = True
-			self._bdy_H1_basis = None
+			#self._bdy_H1_basis = None
 		if not self._triangulation.isOriented():
 			self._triangulation.orient()
 		self._qtons = qtons
@@ -109,6 +110,7 @@ class TN_wrapper(object):
 		self._has_mixed_bdy = {}
 		self._is_embedded = {}
 		self._ends_embedded = {}
+		self._oriented_quads_mat = {}
 
 		if self._manifold.num_cusps() > 0:
 			self._boundary_slopes = {}
@@ -192,8 +194,8 @@ class TN_wrapper(object):
 	def knows_link_complement(self):
 		return self._knows_link_complement
 
-	def bdy_H1_basis(self):
-		return self._bdy_H1_basis
+	#def bdy_H1_basis(self):
+	#	return self._bdy_H1_basis
 
 	def allows_non_admissible(self):
 		return self._allows_non_admissible
@@ -230,7 +232,7 @@ class TN_wrapper(object):
 
 	def qtons(self):
 		"""
-		Enumerate vertex oriented quad normal surfaces for the ideal triangulation self.triangulation()
+		Enumerate vertex quad transversely oriented normal surfaces for the ideal triangulation self.triangulation()
 		This is cached in self._qtons, so calls to this function after the initial call (when TN_wrapper() is 
 		instantiated) will be fast. 
 
@@ -329,7 +331,7 @@ class TN_wrapper(object):
 
 	def boundary_slopes(self,qtons):
 		"""
-		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis W.bdy_H1_basis. 
+		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis of peripheral curves given by SnapPy. 
 		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface. Returns as a tuple of
 		the form (pos_slopes, neg_slopes), where pos_slopes is a list such that pos_slopes[i] is positive boundary slope on cusp i,
 		and similarly for neg_slopes.
@@ -347,10 +349,23 @@ class TN_wrapper(object):
 	
 			if not ind in self._boundary_slopes:
 				s = self.qtons().surface(ind)
-				pos_bdy, neg_bdy = signed_bdy_maps(s, self._peripheral_curve_mats)
-				self._boundary_slopes[ind] = {'outward':pos_bdy, 'inward':neg_bdy}
+				out_bdy = outward_oriented_bdy(s, self._peripheral_curve_mats, self.oriented_quads_mat(s), False)
+				in_bdy = inward_oriented_bdy(s, self._peripheral_curve_mats, self.oriented_quads_mat(s), False)
+				self._boundary_slopes[ind] = {'outward':out_bdy, 'inward':in_bdy}
 			
 			return self._boundary_slopes[ind]
+
+	def oriented_quads_mat(self, qtons):
+		try:
+			ind = int(qtons)
+		except TypeError:
+			ind = int(qtons.name())
+
+		if not ind in self._oriented_quads_mat:
+			s = self.qtons().surface(ind)
+			self._oriented_quads_mat[ind] = oriented_quads_mat(s)
+		
+		return self._oriented_quads_mat[ind]
 
 	def is_embedded(self,qtons):
 		"""Return True if the given qtons can be normally isotoped to be embedded.
@@ -401,7 +416,7 @@ class TN_wrapper(object):
 
 	def spinning_slopes(self,qtons):
 		"""
-		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis W.bdy_H1_basis. 
+		Return the positive and negative boundary slopes of the given surface in H1(bdy(M)), with respect to the basis of peripheral curves given by SnapPy.
 		Argument can be a surface (regina quad transverely oriented normal surface) or the index of a surface.
 
 		sage: W._map_to_H1bdy(3)    # return image in H1(bdy(M)) of the surface with index 3, i.e, W.OrientedNormalSurfaceList.surface(3).
@@ -417,8 +432,9 @@ class TN_wrapper(object):
 	
 			if not ind in self._spinning_slopes:
 				s = self.qtons().surface(ind)
-				pos_bdy, neg_bdy = signed_bdy_maps(s, self._peripheral_curve_mats, True)
-				self._spinning_slopes[ind] = pos_bdy, neg_bdy
+				out_bdy = outward_oriented_bdy(s, self._peripheral_curve_mats, self.oriented_quads_mat(s), True)
+				in_bdy = inward_oriented_bdy(s, self._peripheral_curve_mats, self.oriented_quads_mat(s), True)
+				self._spinning_slopes[ind] = out_bdy, in_bdy
 			
 			return self._spinning_slopes[ind]
 

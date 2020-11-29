@@ -1,1 +1,1 @@
-from .extras import orient, is_orientable, euler_char, oriented_boundary_slopes, connected, is_embedded, genus, num_boundary_comps
+from .extras import orient, is_orientable, euler_char, oriented_boundary_slopes, is_connected, connected_components, num_boundary_comps, spinning_slopes
