@@ -8,4 +8,5 @@ from . import simplicial
 from . import abstract_nbhd
 from . import orientable
 from . import connected
+from . import peripheral
 

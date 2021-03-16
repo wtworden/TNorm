@@ -14,7 +14,7 @@ def regina_to_sage_int(q):
     return Integer(q.longValue())
 
 def regina_to_sage_rat(q):
-    return QQ(q.numerator().longValue(),q.denominator().longValue())
+    return QQ((q.numerator().longValue(),q.denominator().longValue()))
 
 def regina_to_sage_mat(q):
     return Matrix([[regina_to_sage_int(q.entry(i,j)) for j in range(q.columns())] for i in range(q.rows())])

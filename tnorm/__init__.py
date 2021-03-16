@@ -5,7 +5,7 @@ from tnorm.TN_wrapper import TN_wrapper as load
 
 import tnorm.kernel
 import tnorm.extras
-#from tnorm.test import test
+from tnorm.test import test
 #import tnorm.GUI
 
 

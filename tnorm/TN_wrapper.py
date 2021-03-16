@@ -21,6 +21,7 @@ from tnorm.kernel.embedded import is_embedded, ends_embedded
 from tnorm.norm_ball import TNormBall, DualNormBall, NBVertex, Ray, DualVertex
 from tnorm.utilities.sage_types import Matrix, vector, VectorSpace, Polyhedron, RR, QQ
 from tnorm.utilities.cached_prop import cached_property
+from tnorm.kernel.peripheral import periph_basis_intersections, periph_basis_connected
 
 #preparser(False)
 
@@ -82,6 +83,17 @@ class TN_wrapper(object):
 			self._angle_structure = solve_lin_gluing_eq(self._triangulation)
 			self._peripheral_curve_mats = peripheral_curve_mats(self._manifold, self._triangulation)
 			self._manifold_is_closed = False
+
+
+			# check to make sure peripheral basis curves actually give a basis
+			check, message = periph_basis_intersections(self)
+			assert check, message
+			
+			# check to make sure each peripheral basis curve is connected (extra trivial loops
+			# will mess up Euler char calculations).
+			check, message = periph_basis_connected(self)
+			assert check, message
+
 		else:
 			if self._triangulation == None:
 				self._triangulation = regina.Triangulation3(self._manifold._to_string())
@@ -384,6 +396,9 @@ class TN_wrapper(object):
 	def ends_embedded(self,qtons):
 		"""Return True if the ends of the given qtons can be normally isotoped to be embedded.
 		"""
+		if self.manifold_is_closed():
+			return True
+
 		try:
 			ind = int(qtons)
 		except TypeError:
