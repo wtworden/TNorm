@@ -7,15 +7,18 @@ There are two ways to get Tnorm up and running.
 
 The EASY way:
 
-Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches. Currently the stable release is SageMath-9.2 macOS app, available for download here (scroll to bottom and click on SageMath-9.2.dmg):
+Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches. Currently the stable release is SageMath-9.2 macOS app, available for download at the link below:
 
-https://github.com/3-manifolds/Sage_macOS/releases/tag/v1.0
+https://github.com/3-manifolds/Sage_macOS/releases/tag/v1.0  (scroll to bottom and click on SageMath-9.2.dmg)
 
-After opening the installer, drag SageMath into the Applications folder, then be sure to install Recommended.pkg by double clicking on it and following the prompts.
+After opening the installer, drag SageMath-9-2 into the Applications folder, then be sure to install Recommended.pkg by double clicking on it and following the prompts.
 
-Next, open a terminal and do
+Next, open a terminal and open sage:
 
 	$: sage
+
+then install tnorm:
+
 	sage: %pip install tnorm
 
 In the course of installing tnorm, Regina and SnapPy will be installed automatically. Note that Regina will take quite a while to install!
