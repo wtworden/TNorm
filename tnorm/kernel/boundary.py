@@ -78,13 +78,15 @@ def outward_oriented_bdy(qtons, peripheral_curve_mats, oriented_quads_mat=None, 
 ### this is almost the same as sign_bdy_matrix(), except we take the (entry-wise) absolute value
 ### of neg_intersection_mat(). This puts the orientation on quad edges described in Tillmann-- "Normal 
 ### surfaces in topologically finite 3-manifolds". The result are boundary slopes with signs indicating
-### spinning direction. These are 
+### spinning direction.
 def outward_spinning_bdy(qtons, peripheral_curve_mats, oriented_quads_mat):
     return outward_oriented_bdy(qtons, peripheral_curve_mats, oriented_quads_mat, True)
 
 def inward_spinning_bdy(qtons, peripheral_curve_mats, oriented_quads_mat):
     return inward_oriented_bdy(qtons, peripheral_curve_mats, oriented_quads_mat, True)
 
+
+### this function computes spinning slopes for (unoriented) spun normal surfaces. 
 
 def unoriented_spinning_slopes(spun_surface, peripheral_curve_mats, quads_mat=None):
     s = spun_surface
@@ -115,28 +117,6 @@ def unoriented_spinning_slopes(spun_surface, peripheral_curve_mats, quads_mat=No
 
 
 
-## this map is almost the same as qtons_to_H1bdy(), except the SIGN_MATRIX is replaced by 
-## SIGN_MATRIX.apply_map(abs). The result is the boundary slope for the embedded, possibly non-orientable,
-## normal surface obtained by forgetting orientation. The reason this could be non-orientable is 
-## that boundaries of the same slope that spin in oposite directions are cancelled. Thus the
-## self-intersections coming from spinning are avoided, but at the cost of cutting and gluing
-## in a way that does not respect orientation. This should return slopes which are (up to sign)
-## the same as those returned by s.boundaryIntersections().
-def bdy_slopes_unoriented_(oriented_spun_surface, peripheral_curve_mats, quad_mat=None):
-    s = oriented_spun_surface
-    T = s.triangulation()
-
-
-    intersection_mat = matrices.intersection_mat().apply_map(abs)
-    slopes = [] 
-    for c in range(T.countCusps()):
-        periph_mat = peripheral_curve_mats[c] # get the matrix that encodes meridian and longitude for cusp c.
-        if quad_mat == None:
-            quad_mat = matrices.oriented_quads_mat(s) # get the matrix that encodes quad coordinates for s.
-        iota_lambda = QQ(sum([periph_mat[0][i]*intersection_mat*quad_mat[i] for i in range(T.size())]))
-        iota_mu = QQ(sum([periph_mat[1][i]*intersection_mat*quad_mat[i] for i in range(T.size())]))
-        slopes.append((-iota_lambda,iota_mu))
-    return slopes
 
 
 

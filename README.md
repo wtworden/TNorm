@@ -1,8 +1,27 @@
 # TNorm
 
-TNorm is a package for computing the Thurston norm unit ball of finite volume orientable hyperbolic 3-manifolds. Currently, tnorm must be installed in Sage, and Sage must have Regina and SnapPy installed. To instal TNorm:
+TNorm is a package for computing the Thurston norm unit ball of finite volume orientable hyperbolic 3-manifolds. Currently, tnorm must be installed in Sage, and Sage must have Regina and SnapPy installed. 
 
-	$ sage -pip install tnorm
+There are two ways to get Tnorm up and running.
+
+
+The EASY way:
+
+Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches. Currently the stable release is SageMath-9.2 macOS app, available for download here (scroll to bottom and click on SageMath-9.2.dmg):
+
+https://github.com/3-manifolds/Sage_macOS/releases/tag/v1.0
+
+After opening the installer, drag SageMath into the Applications folder, then be sure to install Recommended.pkg by double clicking on it and following the prompts.
+
+Next, open a terminal and do
+
+	$: sage
+	sage: %pip install tnorm
+
+In the course of installing tnorm, Regina and SnapPy will be installed automatically. Note that Regina will take quite a while to install!
+
+
+The HARD(ish) way:
 
 Mac Users: If you have sage installed, and you have already fixed its SSL issue and (if you are on MacOS 10.14 or later) the Mac security issues, and you have set sage as an alias for the full path to sage, then there is a good chance the above command will work. If you are starting from scratch, scroll down to the bottom for detailed instructions for overcoming the hurdles mentioned here.
 

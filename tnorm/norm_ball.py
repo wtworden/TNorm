@@ -118,7 +118,7 @@ class NormBall(object):
         plt = self.polyhedron().plot(dpi=200) + labels
         return plt
 
-    def plot(self, viewer='x3d', online=False, transparency=.4, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=False, window_size=(1000,700)):
+    def plot(self, viewer='x3d', online=False, transparency=.4, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=True, window_size=(1000,700)):
         dual = True if isinstance(self, DualNormBall) else False
         P = self.polyhedron()
         if not P.is_compact():
