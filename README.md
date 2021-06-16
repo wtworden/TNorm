@@ -5,9 +5,9 @@ TNorm is a package for computing the Thurston norm unit ball of finite volume or
 There are two ways to get Tnorm up and running.
 
 
-The EASY way:
+The (very) EASY way:
 
-Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches. Currently the stable release is SageMath-9.2 macOS app, available for download at the link below:
+Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches (thank you, Marc!). Currently the stable release is SageMath-9.2 macOS app, available for download at the link below:
 
 https://github.com/3-manifolds/Sage_macOS/releases/tag/v1.0  (scroll to bottom and click on SageMath-9.2.dmg)
 
