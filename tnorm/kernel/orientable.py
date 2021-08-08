@@ -2,6 +2,7 @@ from tnorm.utilities.regina_helpers import regina_to_sage_int
 from tnorm.kernel.matrices import quads_mat
 
 from tnorm.kernel.abstract_nbhd import abstract_nbhds
+
 from tnorm.utilities.sage_types import Matrix
 
 

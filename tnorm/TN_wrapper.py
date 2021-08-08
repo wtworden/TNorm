@@ -3,6 +3,7 @@ from __future__ import print_function
 from math import gcd as GCD
 
 import sys
+
 try:
     sys.path.remove('/Applications/Regina.app/Contents/MacOS/python')
 except ValueError:
@@ -19,10 +20,9 @@ from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat
 from tnorm.utilities.regina_helpers import regina_to_sage_int
 from tnorm.kernel.embedded import is_embedded, ends_embedded
 from tnorm.norm_ball import TNormBall, DualNormBall, NBVertex, Ray, DualVertex
-from tnorm.utilities.sage_types import Matrix, vector, VectorSpace, Polyhedron, RR, QQ
 from tnorm.utilities.cached_prop import cached_property
 from tnorm.kernel.peripheral import periph_basis_intersections, periph_basis_connected
-
+from tnorm.utilities.sage_types import Matrix, vector, VectorSpace, Polyhedron, RR, QQ
 #preparser(False)
 
 
@@ -42,7 +42,7 @@ class TN_wrapper(object):
 	sage: W = TN_wrapper(string)       # where string is the triangulation encoded as a string (i.e., contents of a tri file)
 	
 	"""
-	def __init__(self, manifold, qtons=None, quiet=False, tracker=False, allows_non_admissible=False, force_simplicial_homology=False):
+	def __init__(self, manifold, quiet=False, tracker=False, allows_non_admissible=False, force_simplicial_homology=False):
 		
 		self._triangulation = None
 		if isinstance(manifold,str):
@@ -103,7 +103,7 @@ class TN_wrapper(object):
 			#self._bdy_H1_basis = None
 		if not self._triangulation.isOriented():
 			self._triangulation.orient()
-		self._qtons = qtons
+		self._qtons = False
 		self._tkr = False
 		self._allows_non_admissible = allows_non_admissible
 		self._is_fibered = 'unknown'
@@ -140,11 +140,12 @@ class TN_wrapper(object):
 			self._tkr = regina.ProgressTracker()
 
 		# compute transversely oriented normal surfaces
-		self._qtons = self.qtons()
+		self._compute_qtons()
+		self._qtons = True
 
 		# name the surfaces by their index in the NormalSurfaces list
-		for i in range(self._qtons.size()):
-			self._qtons.surface(i).setName(str(i))
+		for i in range(self.qtons().size()):
+			self.qtons().surface(i).setName(str(i))
 
 		if not self._QUIET:
 			print('Done.')
@@ -194,6 +195,7 @@ class TN_wrapper(object):
 
 	# need to make this work for qtons without index. I.e., a linear combo of vertex normal surfaces.
 	
+
 	def manifold(self):
 		return self._manifold
 
@@ -242,27 +244,32 @@ class TN_wrapper(object):
 		else:
 			return None
 
+	def _compute_qtons(self):
+		if self._tkr:
+			if self.allows_non_admissible():
+				_ = regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
+			else:
+				_ = regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
+		else:
+			if self.allows_non_admissible():
+				_ = regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
+			else:
+				_ = regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
+		_ = None
+
 	def qtons(self):
 		"""
 		Enumerate vertex quad transversely oriented normal surfaces for the ideal triangulation self.triangulation()
-		This is cached in self._qtons, so calls to this function after the initial call (when TN_wrapper() is 
+		This is cached in the Regina triangulation, so calls to this function after the initial call (when TN_wrapper() is 
 		instantiated) will be fast. 
 
 		Returns a regina.NormalSurfaces object.
 		"""
-		if self._qtons == None:
-			if self._tkr:
-				if self.allows_non_admissible():
-					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT,self._tkr)
-				else:
-					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT,self._tkr)
-			else:
-				if self.allows_non_admissible():
-					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_IMMERSED_SINGULAR,regina.NS_ALG_DEFAULT)
-				else:
-					return regina.NormalSurfaces.enumerate(self.triangulation(),regina.NS_ORIENTED_QUAD,regina.NS_VERTEX,regina.NS_ALG_DEFAULT)
-		else:
-			return self._qtons
+		if self._qtons == False:
+			self._compute_qtons()
+			self._qtons == True
+
+		return self._triangulation.lastChild()
 
 
 	def show_progress(self):
@@ -701,33 +708,6 @@ class TN_wrapper(object):
 			Rays = [Ray(i, rays[i][0], rays[i][1], self) for i in range(len(rays))]
 			vertices = tuple([(pts_dict[tuple(v)],vector(v)) for v in polyhedron.vertices_list() if not vector(v).is_zero()])
 			Vertices = [NBVertex(i, vertices[i][0], vertices[i][1], self) for i in range(len(vertices))]
-#			projected_verts = {}
-#			Vertices = []
-#			for i,v in vertices:
-#				v = vector(v)
-#				v_proj, coeffs = orthogonal_proj(v, polyhedron.lines_list())
-#				v_proj = tuple(v_proj)
-#				boundary_slopes = []
-#				num_boundary_comps = 0
-#				euler_char = coeffs[0]*self.euler_char(pts_dict[tuple(v)])
-#				for j in range(self.manifold().num_cusps()):
-#					slope = vector((0,0))
-#					slope += vector(self.boundary_slopes(i)[j])*coeffs[0]
-#					for k in range(len(polyhedron().lines_list())):
-#						slope += vector(self.boundary_slopes(rays_dict[tuple(polyhedron.lines_list()[k])])[j])*coeffs[k+1]
-#					boundary_slopes.append(slope)
-#					num_boundary_comps += gcd(slope[0],slope[1])
-#				if v_proj not in projected_verts:
-#					projected_verts[v_proj] = (num_boundary_comps, euler_char, boundary_slopes)
-#			polyhedron = Polyhedron(vertices=Matrix(projected_verts.keys()), rays=Matrix(rays_dict.keys()), base_ring=QQ, backend='cdd')
-#			for i in range(len(polyhedron.vertices_list())):
-#				v = tuple(polyhedron.vertices_list()[i])
-#				if v in pts_dict:
-#					Vertices.append(NBVertex(i, pts_dict[v], vector(v), self))
-#				else:
-#					Vertices.append(NBVertex(i, None, vector(v), self, (projected_verts[v][0], projected_verts[v][1], projected_verts[v][2])))
-
-
 
 		else:
 			polyhedron = Polyhedron(vertices=Matrix(pts_dict.keys()), base_ring=QQ)

@@ -1,17 +1,16 @@
 # TNorm
 
-TNorm is a package for computing the Thurston norm unit ball of finite volume orientable hyperbolic 3-manifolds. Currently, tnorm must be installed in Sage, and Sage must have Regina and SnapPy installed. 
+TNorm is a package for computing the Thurston norm unit ball of finite volume orientable hyperbolic 3-manifolds. Currently, tnorm must be installed in Sage. 
 
-There are two ways to get Tnorm up and running.
+There are two ways to get Tnorm up and running. Below is the easy way, scroll down for the hard way (not recommended).
 
+Installing Tnorm:
 
-The (very) EASY way:
+Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches (thank you, Marc!):
 
-Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches (thank you, Marc!). Currently the stable release is SageMath-9.2 macOS app, available for download at the link below:
+https://github.com/3-manifolds/Sage_macOS/releases/latest  (scroll to bottom and click on SageMath-9.X.dmg)
 
-https://github.com/3-manifolds/Sage_macOS/releases/tag/v1.0  (scroll to bottom and click on SageMath-9.2.dmg)
-
-After opening the installer, drag SageMath-9-2 into the Applications folder, then be sure to install Recommended.pkg by double clicking on it and following the prompts.
+After opening the installer, drag SageMath-9-X into the Applications folder, then be sure to install Recommended.pkg by double clicking on it and following the prompts.
 
 Next, open a terminal and open sage:
 
@@ -21,12 +20,8 @@ then install tnorm:
 
 	sage: %pip install tnorm
 
-In the course of installing tnorm, Regina and SnapPy will be installed automatically. Note that Regina will take quite a while to install!
+In the course of installing tnorm, Regina and SnapPy will be installed automatically.
 
-
-The HARD(ish) way:
-
-Mac Users: If you have sage installed, and you have already fixed its SSL issue and (if you are on MacOS 10.14 or later) the Mac security issues, and you have set sage as an alias for the full path to sage, then there is a good chance the above command will work. If you are starting from scratch, scroll down to the bottom for detailed instructions for overcoming the hurdles mentioned here.
 
 To run the tnorm graphical user interface app:
 
@@ -41,18 +36,18 @@ To get started:
 	Vertex 1: represented by (1/2)* S_1,2 at (1), mapped from surface with index 0]
 	sage: 
 
-In a future release, we plan to remove the dependence on Sage.
-
 Support for hyperbolic 3-manifolds that are not multi-component links in rational homology 3-spheres has been added very recently, and has not been thoroughly tested yet. If you get any results that don't make sense, please email me at william.worden@rice.edu.
 
 TO DO:
 
-* add feature: determine fiberedness of a hyp 3-mfld
-* remove Sage dependence.
+* add feature: determine fiberedness of a hyp 3-mfld (this is a long-term goal)
+* remove Sage dependence (this has become low-priority, since installing in Sage is now easy).
 * better documentation throughout.
-* some optimization for speed is probably still possible.
 
-More detailed install instructions for MacOS:
+
+
+The HARD(ish) way (not recommended, but left here to remind us how difficult things were in the old days!):
+
 
 1. Install latest Sage:
 	

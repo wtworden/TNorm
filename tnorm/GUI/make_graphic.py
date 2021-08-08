@@ -1,23 +1,11 @@
 from __future__ import print_function
 import os
-import tempfile
-import contextlib
-import shutil
-
 
 import tkinter as tk
 from tkinter import ttk
 
 from tnorm.GUI.canvas_image import CanvasImage
-
-
-@contextlib.contextmanager
-def make_temp_directory():
-    temp_dir = tempfile.mkdtemp()
-    try:
-        yield temp_dir
-    finally:
-        shutil.rmtree(temp_dir)
+from tnorm.utilities.temp_dir import make_temp_directory
 
 
 def make_canvas_image(tnorm_app, tab, filename):

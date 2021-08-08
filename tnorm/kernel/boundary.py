@@ -1,6 +1,7 @@
 
 from tnorm.kernel import matrices
 from tnorm.utilities.regina_helpers import regina_to_sage_int
+
 from tnorm.utilities.sage_types import Integer, QQ
 
 

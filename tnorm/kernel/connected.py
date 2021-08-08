@@ -1,5 +1,7 @@
 from tnorm.kernel.abstract_nbhd import abstract_nbhds
 from tnorm.kernel.matrices import quads_mat
+
+
 from tnorm.utilities.sage_types import Graph
 
 import regina

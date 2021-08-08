@@ -1,6 +1,6 @@
-#from sympy import Matrix as Matrix
 
 from tnorm.utilities.sage_types import Integer, Matrix, vector
+
 from tnorm.utilities.regina_helpers import regina_to_sage_int, regina_to_sage_mat
 
 

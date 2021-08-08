@@ -1,6 +1,5 @@
 
 from tnorm.utilities.sage_types import Matrix
-#from sympy import Matrix as Matrix
 from tnorm.utilities.regina_helpers import get_oriented_quads, get_quads, in_cusp
 
 

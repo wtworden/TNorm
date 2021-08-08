@@ -2,10 +2,12 @@
 from __future__ import print_function
 
 import os
+import platform
 
 import setuptools
 
 from sage.version import version as sage_version
+
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -14,10 +16,20 @@ this_directory = os.path.dirname(__file__)
 source_directory = os.path.join(this_directory, 'tnorm')
 exec(open(os.path.join(source_directory, 'version.py')).read())  # Load in the variable __version__.
 
-if float(sage_version) >= 9:
-    dependencies = ['networkx>=2.4', 'snappy>=2.7', 'sageRegina>=5.1.9']
+mac_ver = [int(x) for x in platform.mac_ver()[0].split('.')]
+
+if mac_ver[0] == 10 and mac_ver[1] <= 13:
+    if float(sage_version) >= 9:
+        dependencies = ['networkx>=2.4', 'snappy>=3.0', 'sageRegina>=6.0.1']
+    else:
+        dependencies = ['snappy','sageRegina==5.1.5']
+
 else:
-    dependencies = ['snappy','sageRegina==5.1.5']
+    if float(sage_version) >= 9:
+        dependencies = ['networkx>=2.4', 'snappy>=3.0', 'regina>=6.1.0.dev0']
+    else:
+        dependencies = ['snappy','sageRegina==5.1.5']
+
 
 setuptools.setup(
     name='tnorm',  
@@ -44,3 +56,6 @@ setuptools.setup(
 
 ## sage -python setup.py sdist bdist_wheel --universal
 ## twine upload dist/*
+
+## to install dev version, cd to TNorm directory, then:
+## sage -pip install -e .

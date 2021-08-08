@@ -5,7 +5,9 @@ from tnorm.kernel import embedded, orientable, connected, euler
 from tnorm.kernel.matrices import peripheral_curve_mats, oriented_quads_mat, quads_mat
 from tnorm.kernel.boundary import inward_oriented_bdy, outward_oriented_bdy, unoriented_spinning_slopes
 import snappy
+
 from tnorm.utilities.sage_types import Matrix
+
 from tnorm.utilities.regina_helpers import regina_to_sage_int
 
 
