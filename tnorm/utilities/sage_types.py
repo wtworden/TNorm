@@ -24,3 +24,4 @@ from sage.all import span
 from sage.all import Graph
 from sage.all import save
 from sage.all import load
+from sage.all import LatexExpr

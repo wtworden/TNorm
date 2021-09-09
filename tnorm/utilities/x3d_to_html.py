@@ -95,7 +95,7 @@ def make_x3d_schlegel_edges(schlegel_projection, scale_factor, radius, color):
         x3d_str += edge
     return x3d_str
 
-def make_x3d_html(norm_ball, transparency=.7, online=False, directory=None, dual=False, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=False, window_size=(1000,700)):
+def make_x3d_html(norm_ball, transparency=.7, online=False, directory=None, filename=None, dual=False, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=False, window_size=(1000,700)):
     if dual:
         title = 'Dual TNorm Ball'
     else:
@@ -316,7 +316,8 @@ def make_x3d_html(norm_ball, transparency=.7, online=False, directory=None, dual
     shutil.copy2(css, directory)
     shutil.copy2(js, directory)
 
-    filename = os.path.join(directory, 'normball_x3d.html')
+    if filename == None:
+        filename = os.path.join(directory, 'normball_x3d.html')
     
     with open(filename,'w') as file:
         file.write(page)

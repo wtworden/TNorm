@@ -19,13 +19,13 @@ exec(open(os.path.join(source_directory, 'version.py')).read())  # Load in the v
 mac_ver = [int(x) for x in platform.mac_ver()[0].split('.')]
 
 if mac_ver[0] == 10 and mac_ver[1] <= 13:
-    if float(sage_version) >= 9:
+    if float(sage_version[0]) >= 9:
         dependencies = ['networkx>=2.4', 'snappy>=3.0', 'sageRegina>=6.0.1']
     else:
         dependencies = ['snappy','sageRegina==5.1.5']
 
 else:
-    if float(sage_version) >= 9:
+    if float(sage_version[0]) >= 9:
         dependencies = ['networkx>=2.4', 'snappy>=3.0', 'regina>=6.1.0.dev0']
     else:
         dependencies = ['snappy','sageRegina==5.1.5']

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import threading
+import sys
 
 try:
     import Tkinter as tk
@@ -38,6 +39,8 @@ class ConsoleText(tk.Text):
         '''A class for redirecting stdout to this Text widget.'''
         def write(self,str):
             self.text_area.write(str,False)
+        def flush(self):
+            pass
 
     class StderrRedirector(IORedirector):
         '''A class for redirecting stderr to this Text widget.'''

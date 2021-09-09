@@ -131,10 +131,10 @@ class TN_wrapper(object):
 
 		if not self._QUIET:		
 			print('Enumerating quad transversely oriented normal surfaces (qtons)... ', end='')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 
 		if tracker:
 			self._tkr = regina.ProgressTracker()
@@ -149,10 +149,10 @@ class TN_wrapper(object):
 
 		if not self._QUIET:
 			print('Done.')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 
 		if self._betti_number > self._num_cusps:
 			self._has_internal_homology = True
@@ -166,10 +166,10 @@ class TN_wrapper(object):
 
 			if not self._QUIET:
 				print('computing simplicial homology...',end='')
-				try:
-					sys.stdout.flush()
-				except AttributeError:
-					pass
+#				try:
+#					sys.stdout.flush()
+#				except AttributeError:
+#					pass
 
 			self._face_map_to_C2 = get_face_map_to_C2(self._triangulation)
 			self._quad_map_to_C2 = get_quad_map_to_C2(self._triangulation, self._face_map_to_C2)
@@ -186,10 +186,10 @@ class TN_wrapper(object):
 
 			if not self._QUIET:
 				print('Done.')
-				try:
-					sys.stdout.flush()
-				except AttributeError:
-					pass
+#				try:
+#					sys.stdout.flush()
+#				except AttributeError:
+#					pass
 		else:
 			self._uses_simplicial_homology = False
 
@@ -274,10 +274,10 @@ class TN_wrapper(object):
 
 	def show_progress(self):
 		print(self._tkr.percent())
-		try:
-			sys.stdout.flush()
-		except AttributeError:
-			pass
+	#	try:
+	#		sys.stdout.flush()
+	#	except AttributeError:
+	#		pass
 
 
 	def euler_char(self,qtons):
@@ -684,10 +684,10 @@ class TN_wrapper(object):
 		"""
 		if not self._QUIET:
 			print('Computing Thurston norm unit ball... ', end='')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 		pts_dict, rays_dict = self._norm_ball_points
 
 		### If M is not hyperbolic then rays_dict should be non-empty, and the norm ball should be non-compact. 
@@ -788,10 +788,10 @@ class TN_wrapper(object):
 				assert A_norm <= abs(v.euler_char()) # (this should never happen)
 		if not self._QUIET:
 			print('Done.')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 		return ball
 
 	@cached_property
@@ -814,10 +814,10 @@ class TN_wrapper(object):
 	def qtons_info(self):
 		if not self._QUIET:
 			print('Analyzing quad transversely oriented normal surfaces... ', end='')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 		qtons_info_dict = dict([(i,{}) for i in range(self.qtons().size())])
 		for i in range(self.qtons().size()):
 			qtons_info_dict[i]['image_in_H2'] = self.map_to_H2(i)
@@ -830,10 +830,10 @@ class TN_wrapper(object):
 			qtons_info_dict[i]['over_facet'] = self.over_facet(i,as_string=True)
 		if not self._QUIET:
 			print('Done.')
-			try:
-				sys.stdout.flush()
-			except AttributeError:
-				pass
+#			try:
+#				sys.stdout.flush()
+#			except AttributeError:
+#				pass
 		return qtons_info_dict
 
 def check_subfaces(ray,f_poly):

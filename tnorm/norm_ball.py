@@ -7,7 +7,7 @@ import webbrowser
 from tnorm.utilities.x3d_to_html import make_x3d_html
 from tnorm.utilities.hasse import get_hasse
 from tnorm.utilities.cached_prop import *
-from tnorm.utilities.sage_types import vector, Graphics, text3d, Polyhedron, text, RR, QQ
+from tnorm.utilities.sage_types import vector, Graphics, text3d, Polyhedron, text, RR, QQ, LatexExpr
 from tnorm.utilities.temp_dir import make_temp_directory
 
 
@@ -92,37 +92,71 @@ class NormBall(object):
         return self.polyhedron().face_lattice().hasse_diagram()
 
 
-    def _plot2d(self, dual=False):
+    def _plot2d(self, dual=False, transparency=.4, show_labels=True, axes=True, highlight_edges=True, label_color=(0,0,0), edge_color=(0,0,1), label_size=12, edge_thickness=1, vertex_size=.06, ball_color=(0,0,1), save_to=None):
         labels = Graphics()
+        plt0 = self.polyhedron().plot()
+        xymax = max(plt0.get_axes_range()['xmax'], plt0.get_axes_range()['ymax'])
+        plt = self.polyhedron().plot(dpi=200, polygon={'color':ball_color,'alpha':transparency}, line={'color':edge_color,'thickness':edge_thickness}, axes=axes, zorder=5, ticks=[[xymax],[xymax]], tick_formatter=[[str(QQ(xymax))],[str(QQ(xymax))]])
         for i in range(self.num_vertices()):
             v=self.vertices()[i]
             if not dual:
                 if self.dimension() ==1:
-                    labels+=text('S_{},{}'.format(v.genus(),v.num_boundary_comps()), (v.coords()[0]*1.15,0), color='black', dpi=200, fontsize='large', horizontal_alignment='center')
+                    labels+=text('S_{},{}'.format(v.genus(),v.num_boundary_comps()), (v.coords()[0] + .12,0), color=label_color, dpi=200, fontsize=label_size, horizontal_alignment='center',zorder=5)
                 else:
-                    labels+=text('S_{},{}'.format(v.genus(),v.num_boundary_comps()), tuple(v.coords()[j]*1.15 for j in range(len(v.coords()))), color='black', dpi=200, fontsize='large', horizontal_alignment='center')
+                    labels+=text("$S_{{{0},{1}}}$".format(v.genus(),v.num_boundary_comps()), v.coords() + v.coords().normalized()*xymax*.12, color=label_color, dpi=200, fontsize=label_size, horizontal_alignment='center',zorder=5)
             else:
                 if self.dimension() ==1:
-                    labels+=text('{}'.format(v.index()), (v.coords()[0]*1.15,0), color='black', dpi=200, fontsize='large', horizontal_alignment='center')
+                    labels+=text('{}'.format(v.index()), (v.coords()[0] + .12,0), color=label_color, dpi=200, fontsize=label_size, horizontal_alignment='center',zorder=5)
                 else:
-                    labels+=text('{}'.format(v.index()), tuple(v.coords()[j]*1.15 for j in range(len(v.coords()))), color='black', dpi=200, fontsize='large', horizontal_alignment='center')
-        plt = self.polyhedron().plot(dpi=200) + labels
+                    labels+=text('{}'.format(v.index()), v.coords() + v.coords().normalized()*.12, color=label_color, dpi=200, fontsize=label_size, horizontal_alignment='center',zorder=5)
+        plt = plt + labels
+
+        xymax = max(plt.get_axes_range()['xmax'], plt.get_axes_range()['ymax'])
+        xymin = min(plt.get_axes_range()['xmin'], plt.get_axes_range()['ymin'])
+        plt.set_axes_range(xymin,xymax,xymin,xymax)
+        plt.tick_label_color('lightgrey')
+        plt.axes_color('lightgrey')
+        plt.fontsize(14)
+
         return plt
 
-    def plot(self, viewer='x3d', online=False, transparency=.4, show_labels=True, show_axes=True, highlight_edges=True, label_color=(1,1,1), edge_color=(1,1,1), label_size=1, edge_thickness=.01, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=True, window_size=(1000,700)):
+    def plot(self, viewer='x3d', online=False, transparency=.4, show_labels=True, axes=True, highlight_edges=True, label_color=None, edge_color=None, label_size=None, edge_thickness=None, vertex_size=.06, ball_color=(0,0,1), draw_schlegel_faces=True, window_size=(1000,700), save_to=None):
         dual = True if isinstance(self, DualNormBall) else False
         P = self.polyhedron()
         if not P.is_compact():
             P = Polyhedron(P.vertices_list()) # we can't plot an infinite polyhedron, so just plot the finite part.
         if P.dim() in [1,2]:
-            plt = self._plot2d(dual)
-            plt.show()
+            if label_color == None:
+                label_color = (0,0,0)
+            if label_size == None:
+                label_size = 15
+            if edge_color == None:
+                edge_color = (0,0,1)
+            if edge_thickness == None:
+                edge_thickness = 1
+            plt = self._plot2d(dual, transparency, show_labels, axes, highlight_edges, label_color, edge_color, label_size, edge_thickness, vertex_size, ball_color, save_to)
+            if save_to != None:
+                plt.save(save_to)
+            else:
+                plt.show()
         elif P.dim() in [3,4]:
+            if label_color == None:
+                label_color = (1,1,1)
+            if label_size == None:
+                label_size = 1
+            if edge_color == None:
+                edge_color = (1,1,1)
+            if edge_thickness == None:
+                edge_thickness = .01
             if viewer == 'x3d':
-                with make_temp_directory() as temp_dir:
-                    filename = make_x3d_html(self, transparency=transparency, online=online, directory=temp_dir, dual=dual, show_labels=show_labels, show_axes=show_axes, highlight_edges=highlight_edges, label_color=label_color, edge_color=edge_color, label_size=label_size, edge_thickness=edge_thickness, vertex_size=vertex_size, ball_color=ball_color, draw_schlegel_faces=draw_schlegel_faces,window_size=window_size)
-                    webbrowser.open('file://'+filename)
-                    time.sleep(5)
+                if save_to == None:
+                    with make_temp_directory() as temp_dir:
+                        filename = make_x3d_html(self, transparency=transparency, online=online, directory=temp_dir, filename=None, dual=dual, show_labels=show_labels, show_axes=axes, highlight_edges=highlight_edges, label_color=label_color, edge_color=edge_color, label_size=label_size, edge_thickness=edge_thickness, vertex_size=vertex_size, ball_color=ball_color, draw_schlegel_faces=draw_schlegel_faces,window_size=window_size)
+                        webbrowser.open('file://'+filename)
+                        time.sleep(5)
+                else:
+                    filename = make_x3d_html(self, transparency=transparency, online=online, directory=None, filename=save_to, dual=dual, show_labels=show_labels, show_axes=axes, highlight_edges=highlight_edges, label_color=label_color, edge_color=edge_color, label_size=label_size, edge_thickness=edge_thickness, vertex_size=vertex_size, ball_color=ball_color, draw_schlegel_faces=draw_schlegel_faces,window_size=window_size)
+
             else:
                 labels=Graphics()
                 for i in range(self.num_vertices()):
@@ -133,9 +167,13 @@ class NormBall(object):
                         labels+=text3d('{}'.format(v.index()),(v.coords()[0]*1.15,v.coords()[1]*1.15,v.coords()[2]*1.15),color='black',dpi=200,fontsize='large',horizontal_alignment='center')
                 p = P.plot(opacity=opacity, edge_thickness=2)
                 G = p+labels
-                G.show(viewer=viewer,online=online,axes=True)
+                if save_to != None:
+                    G.save(save_to)
+                else:
+                    G.show(viewer=viewer,online=online,axes=axes)
         else:
             print('Can\'t plot polyhedron of dimension greater than 4.')
+
 
 class TNormBall(NormBall):
     def __init__(self, vertices, rays, polyhedron):

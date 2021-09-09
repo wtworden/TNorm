@@ -415,10 +415,13 @@ class TNormApp:
         try:
             M_str = self.ManifoldEntry.get()
             computing=True
+            #t = threading.Thread(target=self.start_spin)
             M = snappy.Manifold(M_str)
-            t = threading.Thread(target=self.load_computations, args=(M,))
-            t.start()
-            self.start_spin()
+            #_ = M.cusp_info()
+            #t = threading.Thread(target=self.load_computations, args=(M,))
+            self.load_computations(M)
+            #t.start()
+            #self.start_spin()
 
         except IOError:
             print("invalid entry")
