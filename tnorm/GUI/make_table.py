@@ -9,10 +9,14 @@ from tkinter import ttk
 
 def make_qtons_table(tnorm_app):
 #    try:
+    tnorm_app.console.write('Analyzing quad transversely oriented normal surfaces... ')
+    tnorm_app.console.update_idletasks()
     qd = tnorm_app.wrapper.qtons_info
     treedata = [(i, qd[i]['image_in_H2'], qd[i]['euler_char'], 'S_{},{}'.format(qd[i]['genus'], qd[i]['num_boundary_comps']), qd[i]['is_embedded'], str(qd[i]['boundary_slopes']['outward']), str(qd[i]['boundary_slopes']['inward']), qd[i]['is_norm_minimizing'], qd[i]['over_facet']) for i in qd]
     column_names = ('qtons index', 'coords', 'euler char', 'topology', 'is_embedded', 'outward_bdy', 'inward_bdy','norm minimizing?','over facet')
     make_treeview_table(tnorm_app.QtonsTab,treedata,column_names, True)
+    tnorm_app.console.write('Done.\n')
+    tnorm_app.console.update_idletasks()
 #    except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
 

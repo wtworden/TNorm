@@ -172,7 +172,7 @@ class NormBall(object):
                 else:
                     G.show(viewer=viewer,online=online,axes=axes)
         else:
-            print('Can\'t plot polyhedron of dimension greater than 4.')
+            raise valueError('Sorry, can\'t plot polyhedron of dimension greater than 4.')
 
 
 class TNormBall(NormBall):

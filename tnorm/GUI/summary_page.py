@@ -6,21 +6,17 @@ from tkinter import ttk
 
 def generate_summary(tnorm_app):
     try:
-        print('Generating summary page... ', end='')
         W=tnorm_app.wrapper
         B=tnorm_app.ball
         P=tnorm_app.ball.polyhedron()
+        T=tnorm_app.wrapper.triangulation()
         M=tnorm_app.wrapper.manifold()
-        try:
-            sym_group = M.symmetry_group()
-        except ValueError:
-            sym_group = 'Failed'
+
         sections = ['Manifold', 'Thurston norm ball', 'Normal surfaces']
         names = [('rank H_2(M;bdy M)', 'volume', 'num tetrahedra', 'num cusps', 'symmetry group'),('num vertices', 'vertex degrees', 'vertices qtons rep (genus,punctures)', 'num faces', 'top dim faces (<verts>)'),('allows non-admissible', 'num qtons', 'num non-trivial in H2', 'num norm minimizing')]
         qtons_inds = [v.qtons_index() for v in B.vertices()]
-        values = [(M.homology().rank(), M.volume(), M.num_tetrahedra(), M.num_cusps(), sym_group), (len(P.vertices()), [sum(P.vertex_adjacency_matrix()[i]) for i in range(P.n_vertices())], [(v.genus(),v.num_boundary_comps()) for v in B.vertices()], len(P.faces(P.dim()-1)), ['<{}>'.format(' '.join([str(v.index()) for v in face.vertices()])) for face in P.faces(P.dim()-1)]), (W.allows_non_admissible(), W.qtons().size(), len([1 for i in range(W.qtons().size()) if W.over_facet(i)!=None]), len([1 for i in range(W.qtons().size()) if W.is_norm_minimizing(i)]))]
+        values = [(T.homology().rank(), W._volume, T.size(), W.num_cusps(), W._sym_group), (len(P.vertices()), [sum(P.vertex_adjacency_matrix()[i]) for i in range(P.n_vertices())], [(v.genus(),v.num_boundary_comps()) for v in B.vertices()], len(P.faces(P.dim()-1)), ['<{}>'.format(' '.join([str(v.index()) for v in face.vertices()])) for face in P.faces(P.dim()-1)]), (W.allows_non_admissible(), W.qtons().size(), len([1 for i in range(W.qtons().size()) if W.over_facet(i)!=None]), len([1 for i in range(W.qtons().size()) if W.is_norm_minimizing(i)]))]
         summary_page(tnorm_app.SummaryTab, sections, names, values)
-        print('Done.')
     except Exception as e: print('Error: {}'.format(e))
     tnorm_app.stop_spin()
 
@@ -29,7 +25,6 @@ def generate_nb_overview(tnorm_app):
         W=tnorm_app.wrapper
         B=tnorm_app.ball
         P=tnorm_app.ball.polyhedron()
-        M=tnorm_app.wrapper.manifold()
 
         sections = ['Overview']
         names = [('dimension', 'is compact?', 'num vertices', 'num rays', 'vertex degrees', 'vertices qtons rep (genus,punctures)', 'all vertices admissible?', 'num faces', 'faces (<vertices by index>)')]
@@ -43,7 +38,6 @@ def generate_dnb_overview(tnorm_app):
         W=tnorm_app.wrapper
         B=tnorm_app.dual_ball
         P=tnorm_app.dual_ball.polyhedron()
-        M=tnorm_app.wrapper.manifold()
 
         sections = ['Overview']
         names = [('dimension', 'is full dimensional?', 'num vertices', 'vertex degrees', 'num faces', 'faces (<vertices by index>)')]

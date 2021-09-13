@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
+import multiprocessing
 import threading
 import platform
 import os
 import io
 import sys
+import time
 
 from tnorm.GUI.make_graphic import make_hasse, _show_polyhedron
 from tnorm.GUI.make_table import make_qtons_table, make_all_vertices_table, make_facets_table, make_dnb_vertices_table
@@ -71,6 +73,25 @@ else:
         'save': '<Control-s>',
         'close': '<Control-w>',
         }
+
+
+class StoppableThread(threading.Thread):
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
+
+    def __init__(self,  *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+#Q = multiprocessing.Queue()
+#ret = {'wrapper':False}
+
 
 class TNormApp:
     def __init__(self, parent):
@@ -220,7 +241,7 @@ class TNormApp:
 
 #        self.CancelButtonFrame = tk.Frame(self.ControlFrame, bg=BG_COLOR)
 #        self.CancelButtonFrame.pack(side=BOTTOM, expand=NO, anchor=SW)
-
+#
 #        self.CancelButton = ttk.Button(self.CancelButtonFrame, text="Cancel", width=6, command=self.cancel_button_click)
 #        self.CancelButton.pack(side=BOTTOM, pady=10)
 
@@ -352,8 +373,8 @@ class TNormApp:
             if tab != current_tab:
                 self.Notebook.tab(tab, state='disabled')
         if current_tab != None:
-            self.Notebook.tab(current_tab, state='disabled')
-
+            #self.Notebook.tab(current_tab, state='disabled')
+            pass
 
     def disable_all_buttons(self):
         self.VertexListButton.configure(state='disabled')
@@ -402,8 +423,14 @@ class TNormApp:
             ind = (ind+1)%9
             self.IconGif.configure(image=frame)
             self.IconFrame.after(100, self.update, ind)
+
         else:
             return None
+
+    def continue_spin(self,ind):
+        self.IconFrame.after(100, self.update, ind)
+        ind=(ind+1)%9
+        return ind
 
     def stop_spin(self):
         self.computing = False
@@ -414,35 +441,78 @@ class TNormApp:
     def load(self):
         try:
             M_str = self.ManifoldEntry.get()
-            computing=True
-            #t = threading.Thread(target=self.start_spin)
-            M = snappy.Manifold(M_str)
-            #_ = M.cusp_info()
-            #t = threading.Thread(target=self.load_computations, args=(M,))
-            self.load_computations(M)
-            #t.start()
-            #self.start_spin()
+            self.disable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial, self.OverviewButton])
+            self.disable_all_buttons()
+            self.disable_all_tabs()
+            self.clear_all_tabs()
+            #M = snappy.Manifold(M_str)
+            self.wrapper = TN_wrapper(M_str,quiet='GUI')
+
+            self.console.write('Enumerating quad transversely oriented normal surfaces (qtons)...')
+            self.console.update_idletasks()
+            self.wrapper._compute_qtons()
+            self.console.write('Done.\n')
+            self.console.update_idletasks()
+
+            self.wrapper._compute_simplicial_homology()
+            self.console.update_idletasks()
+
+            self.console.write('Computing Thurston norm unit ball... ')
+            self.console.update_idletasks()
+            self.ball = self.wrapper.norm_ball
+            #self.ball = self.wrapper._compute_knot_ball(self.ball)
+            self.console.write('Done.\n')
+            self.console.update_idletasks()
+            self.dual_ball = self.wrapper.dual_norm_ball
+            self.console.write('Generating summary...')
+            self.console.update_idletasks()
+            generate_summary(self)
+            self.tabs_normal()
+            self.enable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial])
+            self.Notebook.select(self.SummaryTab)
+            self.console.write('Done.\n')
+            self.console.update_idletasks()
+            #self.stop_spin()
+
+
 
         except IOError:
             print("invalid entry")
 
-    def load_computations(self, M):
-#        try:
-        #self.disable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.BasisLabel, self.ForceSimplicial, self.OverviewButton])
+    def load_computation1(self,wrapper):
+
+        wrapper._compute_qtons()
+        self.wrapper = wrapper
+        #self.stop_spin()
+
+    def load_computation2(self):
+        self.dual_ball = self.wrapper.dual_norm_ball
+        generate_summary(self)
+        self.tabs_normal()
+        self.enable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial])
+        self.Notebook.select(self.SummaryTab)
+        self.stop_spin()
+
+    def cancel_button_click(self):
+        #self.thread.stop()
+        self.wrapper.tracker().cancel()
+        #self.stop_spin()
+        self.clear_all()
+        #self.thread.join()
+
+    def clear_all(self):
         self.disable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial, self.OverviewButton])
         self.disable_all_buttons()
         self.disable_all_tabs()
         self.clear_all_tabs()
-        self.wrapper = TN_wrapper(M, allows_non_admissible=bool(self.allow_na_var.get()), force_simplicial_homology=bool(self.force_simplicial.get()))
-        self.ball = self.wrapper.norm_ball
-        self.dual_ball = self.wrapper.dual_norm_ball
-        generate_summary(self)
-        self.tabs_normal()
-        #self.enable([self.LoadButton, self.ManifoldEntry, self.NaturalRadio, self.ShortestRadio, self.AllowsAdmissible, self.ForceSimplicial, self.BasisLabel])
+        self.ManifoldEntry.delete(0,'end')
         self.enable([self.LoadButton, self.ManifoldEntry, self.AllowsAdmissible, self.ForceSimplicial])
-        self.Notebook.select(self.SummaryTab)
-#        except Exception as e: print('Error: {}'.format(e))
-        self.stop_spin()
+        self.Notebook.tab(self.HelpTab, state='normal')
+        #self.wrapper = None
+        #self.ball = None
+        #self.dual_ball = None
+
+
 
     # option button commands ----------------------------------------------------
 
@@ -541,11 +611,27 @@ class TNormApp:
 #        self.parent.destroy()
 
 
+
+
     # button bindings for Enter key ----------------------------------
 
     def load_on_enter(self,event):
         self.load()
 
+def main_computations(M_str,Q):
+    #ret = Q.get()
+    M = snappy.Manifold(M_str)
+    wrapper = TN_wrapper(M,quiet='GUI')
+    wrapper._compute_qtons()
+    if wrapper._qtons:
+        wrapper._compute_simplicial_homology()
+        ball = wrapper.norm_ball
+        ball = wrapper._compute_knot_ball(ball)
+        dual_ball = wrapper.dual_norm_ball
+    #ret['wrapper']=wrapper
+    print('3')
+    Q.put(wrapper)
+    print('4')
 
 def start():
     root = tk.Tk()
