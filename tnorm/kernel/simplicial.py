@@ -144,6 +144,12 @@ def H2_as_subspace_of_C2(TN_Wrapper, C2_face_map, C2_quad_map):
 
     return non_orthog_H2_basis_in_C2, proj, qtons_image
 
+#def map_qtons_to_O(qtons_index):
+#    non_orthog_H2_basis_in_C2, proj, qtons_image = H2_as_subspace_of_C2(TN_Wrapper, C2_face_map, C2_quad_map)
+#    b = qtons_image[qtons_index]
+#    b_proj = b-proj*b
+#    b_O = sum(b_proj.dot_product(v)*v for v in non_orthog_H2_basis_in_C2)
+
 # same as gram_schmidt below, except we keep the original vectors instead of the orthogonalized vectors.
 # So this just extracts the first d vectors in the list that span, where d=dim(span{vectors})
 def find_spanning_subset(vectors): 

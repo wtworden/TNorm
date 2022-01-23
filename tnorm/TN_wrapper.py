@@ -102,7 +102,7 @@ class TN_wrapper(object):
     norm ball, but the result will not always be correct.
 
     """
-    def __init__(self, manifold, quiet=False, compute_in_bg=False, allows_non_admissible=False, force_simplicial_homology=False):
+    def __init__(self, manifold, quiet=False, compute_in_bg=False, allows_non_admissible=False, force_simplicial_homology=False, force_peripheral_homology=False):
         
         self._triangulation = None
         if isinstance(manifold,str):
@@ -129,6 +129,7 @@ class TN_wrapper(object):
         
         self._QUIET = quiet
         self._force_simplicial_homology = force_simplicial_homology
+        self._force_peripheral_homology = force_peripheral_homology
         self._num_cusps = self._manifold.num_cusps()
         if self._num_cusps != 0:
             try: 
@@ -217,13 +218,22 @@ class TN_wrapper(object):
             pass
 
         # if the manifold has internal homology or force_simplicial_homology==True then we need to use simplicial homology.
-        if self._has_internal_homology or self._force_simplicial_homology:
+        if ( not self._knows_link_complement or self._force_simplicial_homology ) and (not self._force_peripheral_homology ):
             
             self._uses_simplicial_homology = True
             self._simplicial_hom_computed = False
+            self._face_map_to_C2 = None
+            self._quad_map_to_C2 = None
+            self._H2_basis_in_C2 = None
+            self._qtons_image_in_C2 = None
+            self._project_to_im_del3 = None
+            self._map_H2_to_standard_basis = None
+            self._matrix_kerD2_to_H2 = None
+
 
         else:
             self._uses_simplicial_homology = False
+
 
     def _compute_simplicial_homology(self):
         if self._uses_simplicial_homology:
@@ -235,18 +245,22 @@ class TN_wrapper(object):
                 self._quad_map_to_C2 = get_quad_map_to_C2(self._triangulation, self._face_map_to_C2)
         
                 H2_basis_in_C2, P, qtons_image = H2_as_subspace_of_C2(self, self._face_map_to_C2, self._quad_map_to_C2)
-        
+                self._H2_basis_in_C2 = H2_basis_in_C2
+
                 self._project_to_im_del3 = P
                 self._qtons_image_in_C2 = {i:qtons_image[i] for i in range(len(qtons_image))}
         
                 assert len(H2_basis_in_C2) == self._betti_number, self.name()+', force_simplicial_homology={}'.format(self._force_simplicial_homology)
                     # raise an error if the qtons do not generate H2. This should only happen for a knot in a 
                     # rational homology sphere, with force_simplicial_homology=True.
-                
+                I_C2 = Matrix.identity(2*self._triangulation.size())
                 I = Matrix.identity(self._betti_number)
-                B = Matrix(H2_basis_in_C2).transpose()
+                C = Matrix(H2_basis_in_C2)
+                B = C.transpose()
                 A = B.solve_left(I)
-        
+
+                self._matrix_kerD2_to_H2 = A*(I_C2 - P)
+
                 self._map_H2_to_standard_basis = A
                 self._simplicial_hom_computed = True
                 if self._QUIET in [False,'GUI']:
