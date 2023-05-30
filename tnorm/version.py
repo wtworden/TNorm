@@ -5,7 +5,7 @@
 
 Caution: All code in here will be executed by setup.py. '''
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 def version():
     return __version__

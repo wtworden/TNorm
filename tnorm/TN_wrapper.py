@@ -154,6 +154,7 @@ class TN_wrapper(object):
             assert check, message
 
         else:
+            self._knows_link_complement = False
             if self._triangulation == None:
                 self._triangulation = regina.Triangulation3(self._manifold._to_string())
                 for _ in range(10):
@@ -165,7 +166,7 @@ class TN_wrapper(object):
         self._tkr = False
         self._compute_in_bg = compute_in_bg
         self._allows_non_admissible = allows_non_admissible
-        self._is_fibered = 'unknown'
+        #self._is_fibered = 'unknown'
         self._betti_number = self._triangulation.homologyH1().rank()
         self._name = self._manifold.name()
         if self._QUIET == 'GUI':
@@ -218,7 +219,7 @@ class TN_wrapper(object):
             pass
 
         # if the manifold has internal homology or force_simplicial_homology==True then we need to use simplicial homology.
-        if ( not self._knows_link_complement or self._force_simplicial_homology ) and (not self._force_peripheral_homology ):
+        if ( self._has_internal_homology or (not self._knows_link_complement) or self._force_simplicial_homology ) and (not self._force_peripheral_homology ):
             
             self._uses_simplicial_homology = True
             self._simplicial_hom_computed = False
@@ -250,9 +251,12 @@ class TN_wrapper(object):
                 self._project_to_im_del3 = P
                 self._qtons_image_in_C2 = {i:qtons_image[i] for i in range(len(qtons_image))}
         
-                assert len(H2_basis_in_C2) == self._betti_number, self.name()+', force_simplicial_homology={}'.format(self._force_simplicial_homology)
-                    # raise an error if the qtons do not generate H2. This should only happen for a knot in a 
-                    # rational homology sphere, with force_simplicial_homology=True.
+                ##### Not sure why I thought a knot in a QHS would draw an assertion error here, but I don't think 
+                ##### this will happen, so I've removed this for now. (WW 10/3/22)
+                #assert len(H2_basis_in_C2) == self._betti_number, self.name()+', force_simplicial_homology={}'.format(self._force_simplicial_homology)
+                #    # raise an error if the qtons do not generate H2. This should only happen for a knot in a 
+                #    # rational homology sphere, with force_simplicial_homology=True.
+                
                 I_C2 = Matrix.identity(2*self._triangulation.size())
                 I = Matrix.identity(self._betti_number)
                 C = Matrix(H2_basis_in_C2)
@@ -441,18 +445,18 @@ class TN_wrapper(object):
         """
         return self._betti_number
 
-    def is_fibered(self):
-        r"""
-        Return "True" if the associated manifold is fibered.
-
-        In some limited cases, Tnorm can determine if a knot complement 
-        is fibered. If that is the case, this function will return
-        "True" or "False" depending on whether the knot complement is 
-        fibered. If Tnorm does not know if the underlying manifold is 
-        fibered (as will often be the case), this function will return
-        "unknown".
-        """
-        return self._is_fibered
+    #def is_fibered(self):
+    #    r"""
+    #    Return "True" if the associated manifold is fibered.
+#
+    #    In some limited cases, Tnorm can determine if a knot complement 
+    #    is fibered. If that is the case, this function will return
+    #    "True" or "False" depending on whether the knot complement is 
+    #    fibered. If Tnorm does not know if the underlying manifold is 
+    #    fibered (as will often be the case), this function will return
+    #    "unknown".
+    #    """
+    #    return self._is_fibered
 
     def has_internal_homology(self):
         r"""
@@ -1091,30 +1095,26 @@ class TN_wrapper(object):
                 b *= div
             for div in filled_elem_divs:
                 b /= div
-            A = self.manifold().alexander_polynomial()
-            A_norm = QQ(A.degree() - 1)
-            try:
-                v=ball.vertices()[0]
+            #A = self.manifold().alexander_polynomial()
+            #A_norm = QQ(A.degree() - 1)
 
-            except IndexError:
-                pass
 
-            ### below needs to be fixed. Currently does not account for virtual fibers.
-            if A_norm <= 0 or not A.is_monic():
-                self._is_fibered = False
-                ball._confirmed = True
-
-            elif len(ball.vertices())==0:
-                self._is_fibered = True
-                polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-                Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, {'outward':[(0,1)],'inward':[(0,0)]})), NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, {'outward':[(0,-1)],'inward':[(0,0)]}))]
-                ball = TNormBall(Vertices, Rays, polyhedron)
-                ball._confirmed = True
-            elif A_norm == abs(v.euler_char()):
-                assert self.num_H1bdy_comps(v.qtons_index()) == b
-                self._is_fibered = 'unknown'
-                ball._confirmed = True
-            elif A_norm < abs(v.euler_char()):
+            #if A_norm <= 0 or not A.is_monic():
+            #    self._is_fibered = False
+            #    ball._confirmed = True
+#
+            #elif len(ball.vertices())==0:
+            #    self._is_fibered = True
+            #    polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
+            #    Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, {'outward':[(0,1)],'inward':[(0,0)]})), NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, {'outward':[(0,-1)],'inward':[(0,0)]}))]
+            #    ball = TNormBall(Vertices, Rays, polyhedron)
+            #    ball._confirmed = True
+            #elif A_norm == abs(v.euler_char()):
+            #    assert self.num_H1bdy_comps(v.qtons_index()) == b
+            #    self._is_fibered = 'unknown'
+            #    ball._confirmed = True
+            #elif A_norm < abs(v.euler_char()):
+            if True:
                 Mf = M.filled_triangulation()
                 T = regina.Triangulation3(Mf._to_string())
                 boo = T.intelligentSimplify()
@@ -1125,25 +1125,33 @@ class TN_wrapper(object):
                 assert len(non_trivial) != 0, 'Failed to confirm that norm ball is correct (error: len(non_trivial)==0, culprit:M={}.'.format(self.manifold().name())
                 if len(non_trivial) >= 1:
                     genus = min([(2-regina_to_sage_int(ns.surface(i).eulerChar()))/2 for i in non_trivial])
-                    if 2*genus - 2 + b == abs(v.euler_char()):
-                        self._is_fibered = False
-                        ball._confirmed = True
-                    elif 2*genus - 2 + b == A_norm:
-                        multiplier = 1/QQ(abs(v.euler_char())/A_norm)
-                        if self.uses_simplicial_homology() == True:
-                            simplicial_class = multiplier*self.simplicial_class(v.qtons_index())
-                        else:
-                            simplicial_class = None
-                        self._is_fibered == True
-                        polyhedron = Polyhedron(vertices=[[A_norm],[-A_norm]], base_ring=QQ)
-                        Vertices = [NBVertex(0, None, (-1/A_norm,), self, (b, -A_norm, {'outward':[(0,1)],'inward':[(0,0)]})),NBVertex(1, None, (1/A_norm,), self, (b, -A_norm, {'outward':[(0,-1)],'inward':[(0,0)]}))]
+                    euler = 2*genus - 2 + b
+                    if len(ball.vertices()) == 0:
+                        polyhedron = Polyhedron(vertices=[[euler],[-euler]], base_ring=QQ)
+                        Vertices = [NBVertex(0, None, (-1/euler,), self, (b, -euler, {'outward':[(0,1)],'inward':[(0,0)]})),NBVertex(1, None, (1/euler,), self, (b, -euler, {'outward':[(0,-1)],'inward':[(0,0)]}))]
                         ball = TNormBall(Vertices, Rays, polyhedron)
                         ball._confirmed = True
-                    else:
-                        raise AssertionError('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold().name()))
-            else:
-                # if we are here, then something is wrong, and the following will cause an error to be thrown.
-                assert A_norm <= abs(v.euler_char()) # (this should never happen)
+
+                    elif len(ball.vertices()) > 0:
+                        v=ball.vertices()[0]
+                        if 2*genus - 2 + b == abs(v.euler_char()):
+                            ball._confirmed = True
+                        else:
+                            multiplier = 1/QQ(abs(v.euler_char())/euler)
+                            if self.uses_simplicial_homology() == True:
+                                simplicial_class = multiplier*self.simplicial_class(v.qtons_index())
+                            else:
+                                simplicial_class = None
+
+                            polyhedron = Polyhedron(vertices=[[euler],[-euler]], base_ring=QQ)
+                            Vertices = [NBVertex(0, None, (-1/euler,), self, (b, -euler, {'outward':[(0,1)],'inward':[(0,0)]})),NBVertex(1, None, (1/euler,), self, (b, -euler, {'outward':[(0,-1)],'inward':[(0,0)]}))]
+                            ball = TNormBall(Vertices, Rays, polyhedron)
+                            ball._confirmed = True
+                    #else:
+                    #    raise AssertionError('Warning: failed to confirm that norm ball is correct (error: 2g-1!=A_norm or abs(X(S)), culprit:M={}.'.format(self.manifold().name()))
+            #else:
+            #    # if we are here, then something is wrong, and the following will cause an error to be thrown.
+            #    assert A_norm <= abs(v.euler_char()) # (this should never happen)
         else:
             pass
 
