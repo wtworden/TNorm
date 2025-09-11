@@ -6,6 +6,8 @@ There are two ways to get Tnorm up and running. Below is the easy way, scroll do
 
 Installing Tnorm:
 
+MacOS:
+
 Install the latest stable version of Sage_macOS, which is a version of Sage packaged by Marc Culler that makes everything work on a Mac without any headaches (thank you, Marc!):
 
 https://github.com/3-manifolds/Sage_macOS/releases/latest  (scroll to bottom and click on SageMath-9.X.dmg)
@@ -36,7 +38,7 @@ To get started:
 	Vertex 1: represented by (1/2)* S_1,2 at (1), mapped from surface with index 0]
 	sage: 
 
-Support for hyperbolic 3-manifolds that are not multi-component links in rational homology 3-spheres has been added very recently, and has not been thoroughly tested yet. If you get any results that don't make sense, please email me at william.worden@rice.edu.
+Support for hyperbolic 3-manifolds that are not multi-component links in rational homology 3-spheres has been added very recently, and has not been thoroughly tested yet. If you get any results that don't make sense, please email me at wworden@holyfamily.edu.
 
 TO DO:
 
